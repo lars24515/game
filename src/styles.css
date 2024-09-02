@@ -1,0 +1,29 @@
+/* styles.css */
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #333;
+}
+
+#button-container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.button {
+  background-color: #4CAF50;
+  color: #fff;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.button:hover {
+  background-color: #3e8e41;
+}
+
+.button:active {
+  transform: translateY(2px);
+}
