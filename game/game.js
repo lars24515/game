@@ -94,9 +94,12 @@ class Game{
 }
 
 var game = new Game();
+console.log("created game class instance");
 
 function preload() {
     this.load.image("player", "../assets/player.png");
+
+    console.log("preloaded assets")
 }
 
 const textStyle = {
@@ -124,6 +127,7 @@ function create() {
     
     //this.add.text(100, 100, "Hello, Phaser!", textStyle);
     // i will make all display names from playerlis tfrom server
+    console.log("created game assets")
 }
 
 class Network{
@@ -136,6 +140,7 @@ class Network{
                 type: "playerJoined",
                 player: game.localPlayer,
             })
+            console.log("sent playerJoined from client")
         };
         this.socket.onmessage = function(event) {
             switch (JSON.parse(event.data.type)) {

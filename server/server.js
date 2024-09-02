@@ -23,7 +23,7 @@ app.post('/play', (req, res) => {
 
     if (playerDataValid(req.body)) {
         res.send({ message: 'OK' });
-        console.log(req.body.playerName, "connected");
+        console.log(req.body.playerName, "OK");
     } else { // return a message that says data is invalid
         res.send({ message: 'INVALID' });
     }
@@ -51,7 +51,12 @@ server.on('connection', (ws) => {
     clients.set(clientId, ws);
 
     ws.on('message', (message) => {
-        const data = JSON.parse(message);
+        console.log(message);
+        let data = message.toString();
+        console.log("converted data to sting:")
+        console.log(data);
+        data = JSON.parse(data);
+        console.log("successfulyl parsed socket message");
         // dont bother sending entire playerlist when position update. only the uuid assocaited etc.
         if (data.type == "playerJoined") {
             console.log(data.player.name, "connected with uuid", clientId);
@@ -60,6 +65,8 @@ server.on('connection', (ws) => {
                 player: data.player,
                 UUID: clientId,
             })
+        } else {
+            console.log("wtf is this");
         }
     });
 
