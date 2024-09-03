@@ -1,83 +1,146 @@
 const express = require('express');
-const cors = require('cors'); 
-const app = express();
-const port = 3000;
+const cors = require('cors');
 
-/*
-this server is responsible for sending informaiton
-to all clients
-*/
+class WebServer {
+    constructor(port) {
+        this.app = express();
+        this.port = port;
 
-app.use(cors());
+        this.app.use(cors());
+        this.app.use(express.json());
 
-app.use(express.json());
-
-app.post('/play', (req, res) => {
-
-    /* 
-    control that the data is valid, like name, color. etc.
-    if everything is good, return an OK status back to client.
-    if client doesnt receive this, then dont start the game
-    on client side.
-    */
-
-    if (playerDataValid(req.body)) {
-        res.send({ message: 'OK' });
-        console.log(req.body.playerName, "OK");
-    } else { // return a message that says data is invalid
-        res.send({ message: 'INVALID' });
+        this.setupRoutes();
     }
-});
 
-app.listen(port, () => {
-    console.log(`WebServer listening on port ${port}`);
-});
- 
+    setupRoutes() {
+        this.app.post('/play', (req, res) => {
+            this.handlePlayRequest(req, res);
+        });
+    }
+
+    handlePlayRequest(req, res) {
+        if (this.playerDataValid(req.body)) {
+            res.send({ message: 'OK' });
+            console.log(req.body.playerName, "OK");
+        } else { // return a message that says data is invalid
+            res.send({ message: 'INVALID' });
+        }
+    }
+
+    playerDataValid(data){
+        return true;
+    }
+
+    start() {
+        this.app.listen(this.port, () => {
+            console.log(`WebServer listening on port ${this.port}`);
+        });
+    }
+}
+
+const server = new WebServer(3000);
+server.start();
 
 /*-----------------------game----------------------*/
 
-function playerDataValid(data){
-    return true;
-}
 
 // game start
 WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
-const server = new WebSocket.Server({ port: 8080 });
-const clients = new Map();
 
-server.on('connection', (ws) => {
-    const clientId = uuidv4();
-    clients.set(clientId, ws);
+class Network{
+    constructor(port){
+        this.server = new WebSocket.Server({ port: port });
+        console.log('GameServer is running on ws://localhost:8080');
+        this.clients = new Map();
+        this.playerObjects = {}; // UUID : PLAYEROBJ
 
-    ws.on('message', (message) => {
-        console.log(message);
-        let data = message.toString();
-        console.log("converted data to sting:")
-        console.log(data);
-        data = JSON.parse(data);
-        console.log("successfulyl parsed socket message");
-        // dont bother sending entire playerlist when position update. only the uuid assocaited etc.
-        if (data.type == "playerJoined") {
-            console.log(data.player.name, "connected with uuid", clientId);
-            this.broadcast({ // assign uuids to players usnig this 
-                type: "playerJoined",
-                player: data.player,
-                UUID: clientId,
-            })
-        } else {
-            console.log("wtf is this");
-        }
-    });
+        this.server.on('connection', (ws) => {
+            const clientId = uuidv4();
+            this.clients.set(clientId, ws);
 
-    // Function to broadcast data to all clients
-    function broadcast(data) {
-        server.clients.forEach(client => {
-            client.send(JSON.stringify(data));
+            ws.on("close", () => {
+                this.clients.delete(clientId);
+                this.removePlayer(clientId);
+                console.log("Client disconnected: ", clientId);
+                this.broadcast({
+                    type: "playerLeave",
+                    UUID: clientId
+                })
+            });
+        
+            ws.on('message', (message) => {
+                console.log(message.toString()); 
+                const data = JSON.parse(message);  
+
+                switch (data.type) {
+                    case "updatePlayer":
+                        // update a specific players' property
+                        
+                        switch (data.property) {
+                            case "position":
+
+                                // update server
+                                this.playerObjects[data.UUID].position = data.position;
+
+                                // update al clients
+                                this.broadcast({
+                                    type: "updatePlayer",
+                                    UUID: data.UUID,
+                                    property: "position",
+                                    position: data.position
+                                })
+                                
+                                break;
+
+                                // ERROR IN EXCHANGING  POSTION VALUE 
+
+                        }
+                        break;
+                    case "playerJoined":
+                        console.log(data.player.name, "connected with uuid", clientId);
+                        this.broadcast({ // assign UUIDs to players using this 
+                            type: "playerJoined",
+                            player: data.player,
+                            UUID: clientId,
+                        });
+
+                        // now that we've told other clients to add to playelist
+                        // server needs to as well
+                        
+                        this.addPlayer(data.player, clientId);
+
+                        break;
+                    
+                    default:
+                        console.log("Unknown message type:", data.type);
+                        break;
+                }
+    
+            });
+        
+            
         });
     }
-});
 
-console.log('GameServer is running on ws://localhost:8080');
+    removePlayer(UUID) {
+        delete this.playerObjects[UUID];
+        console.log(`removed ${UUID} from playerlist.`);
+    }
 
-let playerObjects = [];
+    addPlayer(player, UUID) {
+        this.playerObjects[UUID] = player;
+        console.log("playerlist+ : ", player.name, " with UUID: ", player.UUID);	
+    }
+
+
+    broadcast(data) { // send data to all clients
+        this.server.clients.forEach(client => {
+            client.send(JSON.stringify(data)); 
+        });
+    }
+
+    
+}
+
+network = new Network(8080);

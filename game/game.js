@@ -19,7 +19,7 @@ var config = {
 var lpSprite;
 
 class Player {
-    constructor(name, color, scene) {
+    constructor(name, color) {
         this.name = name;
         this.color = color;
         this.speed = 100;
@@ -54,8 +54,10 @@ class Player {
 
         // send new info to SOCKET server
         let data = {
-            author: this.playerObject.name,
-            type: 'updatePosition',
+            author: this.UUID,
+            type: 'updatePlayer',
+            property: "position",
+            value: this.playerObject,
         }
         network.send(JSON.stringify(data));
     }
@@ -85,7 +87,7 @@ class Game{
     constructor(){
         this.game = new Phaser.Game(config);
         this.chunkSize = 16;
-        this.playerList = [];
+        this.playerList = {};
         this.localPlayer = new Player("Player1", "blue", this);  // args from URL?
         this.playerEvents = new Phaser.Events.EventEmitter();
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
@@ -118,7 +120,6 @@ function create() {
         right: Phaser.Input.Keyboard.KeyCodes.D
     });
 
-    // Create player sprite
     lpSprite = this.physics.add.sprite(100, 450, 'player');
     lpSprite.setScale(0.075);
     game.localPlayer.sprite = lpSprite;
@@ -136,52 +137,71 @@ class Network{
         this.socket.onopen = function(event) {
             console.log('Connected to WebSocket server');
             // send playerJoined
-            this.send({
+            const data = JSON.stringify({
                 type: "playerJoined",
-                player: game.localPlayer,
-            })
-            console.log("sent playerJoined from client")
+                player: game.localPlayer.playerObject,  // use playerObject for correct data format
+            });
+            this.send(data);
+            console.log("sent playerJoined from client");
         };
+        this.socket.onclose = function(event) {
+            console.log('Disconnected from WebSocket server');
+            window.location.href = "../src/index.html";
+        };
+
         this.socket.onmessage = function(event) {
-            switch (JSON.parse(event.data.type)) {
+            const data = JSON.parse(event.data);
+            switch (data.type) {
+
+                case "playerLeave":
+                    // Remove player from list
+                    delete game.playerList[data.UUID];
+                    console.log("Player left: " + data.player.name + " with UUID: " + data.UUID);
+                    break;
+                
                 case "updatePlayer":
                     // Update a specific players' property
 
+                    if (data.property == "position") {
+                        this.playerList[data.UUID].position = data.position;
+                        console.log(`updated ${data.player.name} position to: ${data.position}`);
+                        break;
+                    }
 
+                    break;
                 case "playerJoined":
                     // Add player to list
-                    if (data.player.name == player.name) {
-                        this.UUID = data.UUID; // get UUID from server
-                        console.log("My UUID is: " + this.UUID);
-                        return; // no shit dont add myself
+                    if (data.player.name == game.localPlayer.name) {
+                        game.localPlayer.UUID = data.UUID; // get UUID from server
+                        console.log("My UUID is: " + game.localPlayer.UUID);
+                        return; // no need to add myself
                     }
+
                     // it is another player
-                    // add to client side player list
-                    game.playerList.push(data.player);
+                    // add to clientside player list
+                    game.playerList[data.UUID] = data.player;
                     console.log("Player joined: " + data.player.name + " with UUID: " + data.UUID);
+                    break;
 
                 default:
-                    console.log("what? i tihnk no type?");
-                    console.log(JSON.parse(event.data));
+                    console.log("Unknown message type:", data.type);
+                    break;
             }
-        }
+        }.bind(this); 
     }
     
     send(data){
-        this.socket.send(JSON.stringify(data));
+        this.socket.send(data);
     }
-
 }
 
 const network = new Network();
 
 
 function update() {
-    // Reset velocity each frame
     game.localPlayer.sprite.setVelocity(0);
-    this.cameras.main.setBackgroundColor(0x25BE4B); // Set green background color
+    this.cameras.main.setBackgroundColor(0x25BE4B); 
 
-    // Handle movement with WASD or Arrow keys
     if (cursors.left.isDown || wasdKeys.left.isDown) {
         game.localPlayer.moveLeft();
     } else if (cursors.right.isDown || wasdKeys.right.isDown) {
@@ -194,7 +214,6 @@ function update() {
         game.localPlayer.moveDown();
     }
 
-    // Emit move event when the player moves
     if (cursors.left.isDown || cursors.right.isDown || cursors.up.isDown || cursors.down.isDown ||
         wasdKeys.left.isDown || wasdKeys.right.isDown || wasdKeys.up.isDown || wasdKeys.down.isDown) {
         game.playerEvents.emit('move');
