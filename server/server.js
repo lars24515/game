@@ -81,14 +81,16 @@ class Network{
                             case "position":
 
                                 // update server
-                                this.playerObjects[data.UUID].position = data.position;
+                                this.playerObjects[data.UUID].x = data.x;
+                                this.playerObjects[data.UUID].y = data.y;
 
                                 // update al clients
                                 this.broadcast({
                                     type: "updatePlayer",
                                     UUID: data.UUID,
                                     property: "position",
-                                    position: data.position
+                                    x: data.x,
+                                    y: data.y,
                                 })
                                 
                                 break;
@@ -131,6 +133,7 @@ class Network{
     addPlayer(player, UUID) {
         this.playerObjects[UUID] = player;
         console.log("playerlist+ : ", player.name, " with UUID: ", player.UUID);	
+        console.log("playerlist+ : ", this.playerObjects);
     }
 
 

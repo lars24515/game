@@ -54,10 +54,12 @@ class Player {
 
         // send new info to SOCKET server
         let data = {
-            author: this.UUID,
+            UUID: this.UUID,
             type: 'updatePlayer',
             property: "position",
-            value: this.playerObject,
+            x: this.sprite.x,
+            y: this.sprite.y,
+            facing: this.playerObject.facing,
         }
         network.send(JSON.stringify(data));
     }
@@ -86,6 +88,7 @@ class Player {
 class Game{
     constructor(){
         this.game = new Phaser.Game(config);
+        this.players = null;
         this.chunkSize = 16;
         this.playerList = {};
         this.localPlayer = new Player("Player1", "blue", this);  // args from URL?
@@ -121,8 +124,15 @@ function create() {
     });
 
     lpSprite = this.physics.add.sprite(100, 450, 'player');
+
+    function createPlayer(){
+        const newPlayer = this.physics.add.sprite(100, 450, 'player');
+        return newPlayer;
+    }
+
     lpSprite.setScale(0.075);
     game.localPlayer.sprite = lpSprite;
+    game.players = this.physics.add.group();
 
     
     
@@ -133,7 +143,7 @@ function create() {
 
 class Network{
     constructor(){
-        this.socket = new WebSocket('ws://localhost:8080');
+        this.socket = new WebSocket('ws://https://ef5e0306-0487-4d18-a598-b6d297d84958-00-1ks7cvl637dyq.riker.replit.dev:8080');
         this.socket.onopen = function(event) {
             console.log('Connected to WebSocket server');
             // send playerJoined
@@ -162,9 +172,14 @@ class Network{
                 case "updatePlayer":
                     // Update a specific players' property
 
+                    if (data.UUID == game.localPlayer.UUID) {
+                        return; // no need to update myself
+                    }
+
                     if (data.property == "position") {
-                        this.playerList[data.UUID].position = data.position;
-                        console.log(`updated ${data.player.name} position to: ${data.position}`);
+                        this.playerList[data.UUID].x = data.x;
+                        this.playerList[data.UUID].y = data.y;
+                        console.log(`updated ${data.player.name} position to: ${data.x}, ${data.y}`);
                         break;
                     }
 
@@ -177,10 +192,13 @@ class Network{
                         return; // no need to add myself
                     }
 
+                    // this will only execute if it is a new player
+
+                    console.log("got here"); // this isnt met for some reason
+
                     // it is another player
                     // add to clientside player list
-                    game.playerList[data.UUID] = data.player;
-                    console.log("Player joined: " + data.player.name + " with UUID: " + data.UUID);
+                    this.handlePlayerJoined(data);
                     break;
 
                 default:
@@ -188,6 +206,14 @@ class Network{
                     break;
             }
         }.bind(this); 
+    }
+
+    handlePlayerJoined(data){
+        game.playerList[data.UUID] = data.player;
+        console.log("Player joined: " + data.player.name + " with UUID: " + data.UUID);
+        
+        newPlayer = createPlayer(data);
+        game.playerList[data.UUID] = newPlayer;
     }
     
     send(data){
