@@ -245,3 +245,40 @@ function update() {
         game.playerEvents.emit('move');
     }
 }
+
+// hotbar will be placed in top center of the screen.
+// always centered, so change positon upon adding an item.
+
+
+class Hotbar {
+    constructor(){
+        this.items = {}; // {itemType: count}
+        this.selectedSlot = 0; // first slot
+        this.slotSize = 32;
+        this.itemSize = 25; // center inside slot
+        this.maxSlotCount = 9;
+    }
+
+    addItemCount(){
+        // call from addItem if item is already present
+    }
+
+    removeItem(){
+
+    }
+
+    addItem(){
+
+    }
+
+    render(){
+
+    }
+}
+
+class UI{
+    constructor(){
+        this.hotbar = new Hotbar();
+    }
+}
+

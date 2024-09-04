@@ -49,7 +49,7 @@ WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 
 class Network{
-    constructor(port){
+    constructor(port){  
         this.server = new WebSocket.Server({ port: port });
         console.log('GameServer is running on ws://localhost:8080');
         this.clients = new Map();
