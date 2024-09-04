@@ -147,3 +147,18 @@ class Network{
 }
 
 network = new Network(8080);
+
+// World generation
+/*
+Go about this by having a grid or something in an array. 
+Track all playerObj coordinates, and if any of those coordinates*tileSize.x || .y > any existing tiles in the grid, generate a new chunk.
+something like tat.
+
+Or constatly check viewport and if tile position is anyhting near, generate a new chunk 
+same with unloading
+
+*/
+
+function worldGeneration(){
+
+}
