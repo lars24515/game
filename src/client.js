@@ -8,7 +8,7 @@ async function play() {
         if (playerName.length == 0) {
             throw new Error("Name cannot be empty");
         }
-        const response = await fetch('https://ef5e0306-0487-4d18-a598-b6d297d84958-00-1ks7cvl637dyq.riker.replit.dev/play', {
+        const response = await fetch('https://localhost/play', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

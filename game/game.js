@@ -143,7 +143,7 @@ function create() {
 
 class Network{
     constructor(){
-        this.socket = new WebSocket('ws://https://ef5e0306-0487-4d18-a598-b6d297d84958-00-1ks7cvl637dyq.riker.replit.dev:8080');
+        this.socket = new WebSocket('ws://localhost:8080');
         this.socket.onopen = function(event) {
             console.log('Connected to WebSocket server');
             // send playerJoined
