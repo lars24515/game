@@ -18,6 +18,17 @@ var config = {
 
 var lpSprite;
 
+class playerHand{
+    constructor(){
+        this.diameter = null;
+        this.color = null;
+    }
+
+    render(playerObject, angle) {
+        // use playerobj position, angle, etc. to render cin someting
+    }
+}
+
 class Player {
     constructor(name, color) {
         this.name = name;
@@ -25,6 +36,7 @@ class Player {
         this.speed = 100;
         this.UUID = null;
         this.sprite = null;
+        this.Hand = null;
 
         // Server object
         this.playerObject = {
@@ -36,6 +48,8 @@ class Player {
             holding: "",
         };
     }
+
+    
 
     renderDisplayName(){
         
@@ -92,6 +106,7 @@ class Game{
         this.chunkSize = 16;
         this.playerList = {};
         this.localPlayer = new Player("Player1", "blue", this);  // args from URL?
+        this.localPlayer.Hand = new playerHand(this.localPlayer);
         this.playerEvents = new Phaser.Events.EventEmitter();
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
         console.log("finished game constructor");
@@ -251,12 +266,18 @@ function update() {
 
 
 class Hotbar {
-    constructor(){
+    constructor(x, y){
+        this.x = x;
+        this.y = y;
         this.items = {}; // {itemType: count}
         this.selectedSlot = 0; // first slot
         this.slotSize = 32;
         this.itemSize = 25; // center inside slot
         this.maxSlotCount = 9;
+    }
+
+    render(){
+            
     }
 
     addItemCount(){
@@ -270,15 +291,36 @@ class Hotbar {
     addItem(){
 
     }
+}
 
-    render(){
+class Health {
+    constructor(x, y){
+        this.x = x;
+        this.y = y;
+        this.max = 100;
+        this.vale = max;
+        // fill a bar to represent value
+    }
+
+    render(){ 
 
     }
 }
 
 class UI{
     constructor(){
-        this.hotbar = new Hotbar();
+        this.elements = {
+            hotbar: new Hotbar(), // x, y
+            health: new Health(),
+        }
+    }
+
+    // render all UI elements
+
+    renderElements(){
+        Object.values(this.elements).forEach(element => {
+            element.render();
+        });
     }
 }
 
