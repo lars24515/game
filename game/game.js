@@ -37,6 +37,19 @@ class Player {
         };
     }
 
+    calculateHandAngle(){
+
+        // Mouse position
+        let pointer = this.scene.input.activePointer;
+        let mouseX = pointer.worldX;
+        let mouseY = pointer.worldY;
+
+        let angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, mouseX, mouseY);
+
+        let angleInDegrees = Phaser.Math.RadToDeg(angle);
+        console.log(angleInDegrees);
+    }
+
     
 
     renderDisplayName() {
@@ -44,7 +57,8 @@ class Player {
     }
     
     update(){
-
+        this.calculateHandAngle();
+        this.renderDisplayName();
     }
 
     onPlayerMove() {
@@ -229,6 +243,8 @@ function update() {
     localPlayer.sprite.setVelocity(0);
     this.cameras.main.setBackgroundColor(0x25BE4B); 
 
+    // player movement
+
     if (cursors.left.isDown || wasdKeys.left.isDown) {
         localPlayer.moveLeft();
     } else if (cursors.right.isDown || wasdKeys.right.isDown) {
@@ -245,6 +261,10 @@ function update() {
         wasdKeys.left.isDown || wasdKeys.right.isDown || wasdKeys.up.isDown || wasdKeys.down.isDown) {
         playerEvents.emit('move');
     }
+
+    // player hand
+
+    
 
     // hotbar
 
