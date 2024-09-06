@@ -16,27 +16,15 @@ var config = {
     }
 };
 
-var lpSprite;
-
-class playerHand{
-    constructor(){
-        this.diameter = null;
-        this.color = null;
-    }
-
-    render(playerObject, angle) {
-        // use playerobj position, angle, etc. to render cin someting
-    }
-}
-
 class Player {
-    constructor(name, color) {
+    constructor(name, color, sprite, scene) {
         this.name = name;
         this.color = color;
-        this.speed = 100;
+        this.scene = scene;
+        this.velocity = 100;
         this.UUID = null;
-        this.sprite = null;
-        this.Hand = null;
+        this.sprite = sprite;
+        this.nameText = this.scene.add.text( this.sprite.x, this.sprite.y - 20, this.name, { font: "16px Arial", fill: "#ffffff" } ).setOrigin(0.5);
 
         // Server object
         this.playerObject = {
@@ -51,10 +39,10 @@ class Player {
 
     
 
-    renderDisplayName(){
-        
+    renderDisplayName() {
+        this.nameText.setPosition(this.sprite.x, this.sprite.y - 20);
     }
-
+    
     update(){
 
     }
@@ -105,10 +93,6 @@ class Game{
         this.players = null;
         this.chunkSize = 16;
         this.playerList = {};
-        this.localPlayer = new Player("Player1", "blue", this);  // args from URL?
-        this.localPlayer.Hand = new playerHand(this.localPlayer);
-        this.playerEvents = new Phaser.Events.EventEmitter();
-        this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
         console.log("finished game constructor");
     }
 }
@@ -130,6 +114,13 @@ const textStyle = {
 
 function create() {
 
+    
+    lpSprite = this.physics.add.sprite(100, 450, 'player');
+    lpSprite.setScale(0.075);
+    localPlayer = new Player("Player1", "blue", lpSprite, this);  // args from URL?
+    playerEvents = new Phaser.Events.EventEmitter();
+    playerEvents.on('move', localPlayer.onPlayerMove.bind(localPlayer));
+
     cursors = this.input.keyboard.createCursorKeys();
     wasdKeys = this.input.keyboard.addKeys({
         up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -138,16 +129,10 @@ function create() {
         right: Phaser.Input.Keyboard.KeyCodes.D
     });
 
-    lpSprite = this.physics.add.sprite(100, 450, 'player');
-
-    function createPlayer(){
-        const newPlayer = this.physics.add.sprite(100, 450, 'player');
-        return newPlayer;
-    }
-
-    lpSprite.setScale(0.075);
-    game.localPlayer.sprite = lpSprite;
+   
     game.players = this.physics.add.group();
+    this.hotbar = new Hotbar(this);
+    this.hotbar.render();
 
     
     
@@ -240,25 +225,32 @@ const network = new Network();
 
 
 function update() {
-    game.localPlayer.sprite.setVelocity(0);
+
+    localPlayer.sprite.setVelocity(0);
     this.cameras.main.setBackgroundColor(0x25BE4B); 
 
     if (cursors.left.isDown || wasdKeys.left.isDown) {
-        game.localPlayer.moveLeft();
+        localPlayer.moveLeft();
     } else if (cursors.right.isDown || wasdKeys.right.isDown) {
-        game.localPlayer.moveRight();
+        localPlayer.moveRight();
     }
 
     if (cursors.up.isDown || wasdKeys.up.isDown) {
-        game.localPlayer.moveUp();
+        localPlayer.moveUp();
     } else if (cursors.down.isDown || wasdKeys.down.isDown) {
-        game.localPlayer.moveDown();
+        localPlayer.moveDown();
     }
 
     if (cursors.left.isDown || cursors.right.isDown || cursors.up.isDown || cursors.down.isDown ||
         wasdKeys.left.isDown || wasdKeys.right.isDown || wasdKeys.up.isDown || wasdKeys.down.isDown) {
-        game.playerEvents.emit('move');
+        playerEvents.emit('move');
     }
+
+    // hotbar
+
+    this.hotbar.render();
+
+
 }
 
 // hotbar will be placed in top center of the screen.
@@ -266,9 +258,11 @@ function update() {
 
 
 class Hotbar {
-    constructor(x, y){
-        this.x = x;
-        this.y = y;
+    constructor(scene){
+        this.scene = scene;
+        this.graphics = this.scene.add.graphics();
+        this.padding = 50;
+        this.xPadding = 40;
         this.items = {}; // {itemType: count}
         this.selectedSlot = 0; // first slot
         this.slotSize = 32;
@@ -276,8 +270,28 @@ class Hotbar {
         this.maxSlotCount = 9;
     }
 
+    selectSlot(slot){
+        this.selectedSlot = slot;   
+
+    }
+
+    renderSelectedSlot(){
+        this.graphics.fillStyle(0xFFFFFF, 0.1);
+        this.graphics.fillRect(this.selectedSlot * this.xPadding+this.padding-5, 35, this.slotSize+10, this.slotSize+10);
+    }
+
+    renderSquare(x){
+        
+        this.graphics.fillStyle(0x000000, 0.1);
+        this.graphics.fillRect(this.padding+x, 40, this.slotSize, this.slotSize);
+    }
+
     render(){
+        for (let i = 0; i < this.maxSlotCount; i++) {
+            this.renderSelectedSlot();
+            this.renderSquare(i * this.xPadding);
             
+        }    
     }
 
     addItemCount(){
