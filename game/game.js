@@ -60,13 +60,13 @@ class Player {
     }
 
     onPlayerMove() {
-        // Logic to handle player movement on the server
+        // handle player movement on the server
         this.playerObject.x = this.sprite.x;
         this.playerObject.y = this.sprite.y;
         this.playerObject.facing = this.sprite.facing;
         this.playerObject.holding = this.sprite.holding;
 
-        // send new info to SOCKET server
+        // send new info to socket server
         let data = {
             UUID: this.UUID,
             type: 'updatePlayer',
@@ -195,8 +195,8 @@ class Network{
                         this.playerList[data.UUID].x = data.x;
                         this.playerList[data.UUID].y = data.y;
                         console.log(`updated ${data.player.name} position to: ${data.x}, ${data.y}`);
-                        break;
                     }
+                    break;
 
                     break;
                 case "playerJoined":
@@ -293,11 +293,11 @@ class Hotbar {
     }
 }
 
-class Health {
+class Stats { // health, hunger, thirst?
     constructor(x, y){
         this.x = x;
         this.y = y;
-        this.max = 100;
+        this.max = 100; // add other sto
         this.vale = max;
         // fill a bar to represent value
     }

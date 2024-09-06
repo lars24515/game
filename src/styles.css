@@ -1,23 +1,64 @@
-/* styles.css */
-
+/* General body styling */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #333;
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #1a1a1a;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
 }
 
-#button-container {
+/* Centering the game container */
+#game-container {
   text-align: center;
-  margin-top: 50px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
+/* Styling for the title */
+.title {
+  font-size: 3em;
+  margin-bottom: 20px;
+  color: #e0e0e0;
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Button container styling */
+#button-container {
+  margin-top: 20px;
+}
+
+/* Styling the input */
+#playerName {
+  padding: 15px;
+  font-size: 18px;
+  border: 2px solid #4CAF50;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  width: 80%;
+  max-width: 300px;
+  background-color: #262626;
+  color: #fff;
+  text-align: center;
+  outline: none;
+}
+
+/* Styling the button */
 .button {
   background-color: #4CAF50;
-  color: #fff;
+  color: white;
   padding: 15px 30px;
+  font-size: 18px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 18px;
+  transition: background-color 0.3s, transform 0.1s;
 }
 
 .button:hover {
@@ -26,4 +67,11 @@ body {
 
 .button:active {
   transform: translateY(2px);
+}
+
+/* Add a slight animation to input field on focus */
+#playerName:focus {
+  border-color: #66bb6a;
+  background-color: #333;
+  transition: border-color 0.3s, background-color 0.3s;
 }

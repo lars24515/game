@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Survival Game</title>
     <script src="client.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="button-container">
-        <input id="playerName"></input>
-        <button class="button" onclick="play()">Play</button>
+    <div id="game-container">
+        <h1 class="title">Survival Game</h1>
+        <div id="button-container">
+            <input id="playerName" type="text" placeholder="Enter your name..." autocomplete="off">
+            <button class="button" onclick="play()">Play</button>
+        </div>
     </div>
-   
 </body>
 </html>
