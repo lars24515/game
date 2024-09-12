@@ -23,7 +23,7 @@ async function play() {
 
        if (data.message == "OK"){
         // redirec to game.html tihng
-        window.location.href = "../game/game.html";
+        window.location.href = "../game/game.html?username=" + playerName;
        } else {
         // shoe error on client
         console.log("invalid data esnt to server:")

@@ -21,7 +21,7 @@ class WebServer {
     handlePlayRequest(req, res) {
         if (this.playerDataValid(req.body)) {
             res.send({ message: 'OK' });
-            console.log(req.body.playerName, "OK");
+            console.log(req.body.playerName, " CONNECTION OK");
         } else { // return a message that says data is invalid
             res.send({ message: 'INVALID' });
         }
@@ -116,10 +116,13 @@ class Network{
                         this.addPlayer(data.player, clientId);
 
                         // send world seed to client joined
+                        /*
                         ws.send({
                             type: "worldSeed",
-                            seed: worldSeed
+                            seed: worldSeed,
                         })
+                        */
+                        console.log("hello world");
 
                         // updaetTile(position) upon mining tree
 
@@ -143,8 +146,7 @@ class Network{
 
     addPlayer(player, UUID) {
         this.playerObjects[UUID] = player;
-        console.log("playerlist+ : ", player.name, " with UUID: ", player.UUID);	
-        console.log("playerlist+ : ", this.playerObjects);
+        console.log("playerList updated: ", this.playerObjects);
     }
 
 
