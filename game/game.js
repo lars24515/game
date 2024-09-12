@@ -1,3 +1,6 @@
+import AssetManager from './assetManager.js';
+
+
 function getUrlParameter(name) {
     name = name.replace(/[\[\]]/g, "\\$&");
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
@@ -19,20 +22,24 @@ class Game extends Phaser.Scene {
         this.playerList = {};
         this.worldSize = 50;
         this.chunkSize = 16;
-        this.tileSize = 4;
+        this.tileSize = 32; // Adjust based on your tile images
         this.possibleTiles = [
-            { type: "Grass", threshold: 0.3 },
-            { type: "Mountain", threshold: 0.6 },
-            { type: "Tree", threshold: 0.8 },
-            { type: "Water", threshold: 1.0 }
+            { type: "Grass", threshold: 0.3, key: "grass" },
+            { type: "Mountain", threshold: 0.6, key: "mountain" },
+            { type: "Tree", threshold: 0.8, key: "tree" },
+            { type: "Water", threshold: 1.0, key: "water" }
         ];
         this.seed = null;
         this.world = [];
-        this.playerEvents = new Phaser.Events.EventEmitter(); // Define playerEvents here
+        this.playerEvents = new Phaser.Events.EventEmitter();
     }
 
     preload() {
-        this.load.image("player", "../assets/player.png");
+        // Load tile images
+        this.load.image("grass", "../assets/grass.png");
+        this.load.image("mountain", "../assets/mountain.png");
+        this.load.image("tree", "../assets/tree.png");
+        this.load.image("water", "../assets/water.png");
         console.log("Preloaded assets");
     }
 
@@ -55,11 +62,16 @@ class Game extends Phaser.Scene {
 
         // Initialize Network after game creation
         window.network = new Network(this); // Pass this scene to Network
+
+        // Generate world and create map
+        this.generateWorld(this.seed); // Generate world with a seed
+        this.createMap(); // Create the tilemap from generated world data
     }
 
     update() {
         this.cameras.main.setBackgroundColor(0x25BE4B);
 
+        // Handle movement keys
         if (this.cursors.left.isDown || this.wasdKeys.left.isDown) {
             this.localPlayer.moveLeft();
         } else if (this.cursors.right.isDown || this.wasdKeys.right.isDown) {
@@ -103,7 +115,36 @@ class Game extends Phaser.Scene {
             }
         }
     }
+
+    createMap() {
+        const map = this.add.tilemap("map");
+        const tileset = map.addTilesetImage("tiles", "tiles");
+
+        // Create a layer for the tiles
+        const layer = map.createStaticLayer("Tile Layer 1", tileset, 0, 0);
+
+        // Set up the tile map with the generated world data
+        for (let x = 0; x < this.worldSize; x++) {
+            for (let y = 0; y < this.worldSize; y++) {
+                let tileType = this.world[x][y];
+                let tileIndex = this.getTileIndex(tileType);
+                layer.putTileAt(tileIndex, x, y);
+            }
+        }
+    }
+
+    getTileIndex(type) {
+        // Map tile type to tile index; adjust according to your tile sheet
+        switch (type) {
+            case "Grass": return 0; // Index for grass tile
+            case "Mountain": return 1; // Index for mountain tile
+            case "Tree": return 2; // Index for tree tile
+            case "Water": return 3; // Index for water tile
+            default: return 0;
+        }
+    }
 }
+
 
 class Player {
     constructor(name, color, scene) {
