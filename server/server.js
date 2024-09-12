@@ -43,6 +43,8 @@ server.start();
 
 /*-----------------------game----------------------*/
 
+const worldSeed = Math.floor(Math.random() * 1000000).toString();
+
 
 // game start
 WebSocket = require('ws');
@@ -99,6 +101,7 @@ class Network{
 
                         }
                         break;
+
                     case "playerJoined":
                         console.log(data.player.name, "connected with uuid", clientId);
                         this.broadcast({ // assign UUIDs to players using this 
@@ -111,6 +114,14 @@ class Network{
                         // server needs to as well
                         
                         this.addPlayer(data.player, clientId);
+
+                        // send world seed to client joined
+                        ws.send({
+                            type: "worldSeed",
+                            seed: worldSeed
+                        })
+
+                        // updaetTile(position) upon mining tree
 
                         break;
                     
@@ -159,6 +170,10 @@ same with unloading
 
 */
 
-function worldGeneration(){
+// GENERATE GRID USING PERIN NOISE,
 
-}
+// MAKE ARRAY FROM PERLIN NOISE
+
+// SEND TO ALL CLIENTS
+
+// HANDLING ON CLIENT INSTEAD***********'

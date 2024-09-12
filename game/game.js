@@ -23,7 +23,7 @@ class Player {
         this.scene = scene;
         this.velocity = 100;
         this.UUID = null;
-        this.sprite = sprite;
+        this.sprite =  this.scene.physics.add.sprite(100, 450, 'player').setScale(0.075);
         this.nameText = this.scene.add.text( this.sprite.x, this.sprite.y - 20, this.name, { font: "16px Arial", fill: "#ffffff" } ).setOrigin(0.5);
 
         // Server object
@@ -104,14 +104,58 @@ class Player {
 class Game{
     constructor(){
         this.game = new Phaser.Game(config);
+        this.localPlayer = new Player("Player1", "blue", null, config.scene); 
         this.players = null;
-        this.chunkSize = 16;
         this.playerList = {};
+        this.worldSize = 50;
+        this.chunkSize = 16;
+        this.tileSize = 4;
+        this.possibleTiles = [
+            { type: "Grass", threshold: 0.3 },
+            { type: "Mountain", threshold: 0.6 },
+            { type: "Tree", threshold: 0.8 },
+            { type: "Water", threshold: 1.0 }
+        ];
+        this.seed = null;
+        this.world = [];
+
+        // i will run generate world
+        // from network upon receiving seed
+
         console.log("finished game constructor");
+    }
+
+    generateWorld(seed) {
+        
+        var noiseGenerator = new SimplexNoise(seed);
+
+        for (let x = 0; x < this.worldSize; x++) {
+            this.world[x] = [];
+            for (let y = 0; y < this.worldSize; y++) {
+                // Generate Perlin noise value
+                let noiseValue = noiseGenerator.noise2D(x / this.worldSize, y / this.worldSize);
+
+                // Map noise value to tile type
+                let tileType = this.getTileType(noiseValue);
+                this.world[x][y] = tileType;
+            }
+        }
+        console.log("world generated");
+        return this.world;
+    }
+
+    getTileType(noiseValue) {
+        // Normalize noise value to 0 - 1
+        let normalizedValue = (noiseValue + 1) / 2;
+        for (let tile of this.possibleTiles) {
+            if (normalizedValue <= tile.threshold) {
+                return tile.type;
+            }
+        }
     }
 }
 
-var game = new Game();
+var game = new Game()
 console.log("created game class instance");
 
 function preload() {
@@ -128,12 +172,8 @@ const textStyle = {
 
 function create() {
 
-    
-    lpSprite = this.physics.add.sprite(100, 450, 'player');
-    lpSprite.setScale(0.075);
-    localPlayer = new Player("Player1", "blue", lpSprite, this);  // args from URL?
     playerEvents = new Phaser.Events.EventEmitter();
-    playerEvents.on('move', localPlayer.onPlayerMove.bind(localPlayer));
+    playerEvents.on('move', game.localPlayer.onPlayerMove.bind(game.localPlayer));
 
     cursors = this.input.keyboard.createCursorKeys();
     wasdKeys = this.input.keyboard.addKeys({
@@ -176,6 +216,11 @@ class Network{
         this.socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
             switch (data.type) {
+
+                case "worldSeed":
+                    const seed = data.seed;
+                    game.generateWorld(seed);
+                    
 
                 case "playerLeave":
                     // Remove player from list
