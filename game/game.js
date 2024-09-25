@@ -72,7 +72,18 @@ class Game extends Phaser.Scene {
 
     preload() {
         // Load tile images
-        this.load.image("grass", "../assets/resources/grass/0.png");
+
+        
+
+        this.load.image("grass0", "../assets/resources/grass/0.png");
+        this.load.image("grass1", "../assets/resources/grass/1.png");
+        this.load.image("grass2", "../assets/resources/grass/2.png");
+        this.load.image("grass3", "../assets/resources/grass/3.png");
+        this.load.image("grass4", "../assets/resources/grass/4.png");
+        this.load.image("grass5", "../assets/resources/grass/5.png");
+        this.load.image("grass6", "../assets/resources/grass/6.png");
+
+
         this.load.image("mountain", "../assets/resources/mountain.png");
         this.load.image("tree", "../assets/resources/forest.png");
         this.load.image("water", "../assets/resources/water.png");
@@ -82,6 +93,18 @@ class Game extends Phaser.Scene {
     create() {
         this.localPlayer = new Player(username, "blue", this);
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
+
+        // textures
+
+        this.grassTextures = [
+            "grass0",
+            "grass1",
+            "grass2",
+            "grass3",
+            "grass4",
+            "grass5",
+            "grass6",
+        ];
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasdKeys = this.input.keyboard.addKeys({
@@ -149,14 +172,24 @@ class Game extends Phaser.Scene {
         }
     }
 
+    getRandomElement(array) {
+        const randomIndex = Phaser.Math.Between(0, array.length - 1);
+        return array[randomIndex];
+    }
+
     createMap() {
         for (let x = 0; x < this.worldSize; x++) {
             for (let y = 0; y < this.worldSize; y++) {
                 let tileType = this.world[x][y];
                 let tileKey = this.getTileKey(tileType);
     
-                // Place the tile image at the correct position
-                this.add.image(x * this.tileSize, y * this.tileSize, tileKey).setOrigin(0, 0);
+               
+                if (tileKey === "grass") {
+                    this.add.image(x * this.tileSize, y * this.tileSize, this.getRandomElement(this.grassTextures)).setOrigin(0, 0);
+                } else{
+                    this.add.image(x * this.tileSize, y * this.tileSize, tileKey).setOrigin(0, 0);
+                }
+
             }
         }
     }
