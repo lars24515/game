@@ -1,6 +1,3 @@
-import AssetManager from './assetManager.js';
-
-
 function getUrlParameter(name) {
     name = name.replace(/[\[\]]/g, "\\$&");
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
@@ -11,6 +8,43 @@ function getUrlParameter(name) {
 }
 
 var username = getUrlParameter('username');
+
+/*
+
+-- server
+
+assetPaths = {
+    "grass": {
+            0: "../assets/resources/grass/0.png",
+            1: "../assets/resources/grass/1.png",
+        },
+    "mountain": "../assets/resources/mountain.png",
+}
+
+forEach(folder in fs.readdir("../assets/"))
+    for (file in fs.readdir(folder)){
+        assetPaths[folderName][i] = file.path
+    }
+
+when "./get-assets" is called:
+return assetPaths
+
+-- client
+
+getassets(serverURL:8080/get-assets);
+
+let assets = {};
+
+function getAssets(data){
+    for (folder in data.assets){
+        assets{folderName} = {}; //--> empty object for all paths
+        for (file in data.assets[folder]){
+            assets[folderName][file] = phaser.load(image, file.name)
+        }
+    } 
+}
+
+*/
 
 // Define the Game class first
 class Game extends Phaser.Scene {
@@ -25,6 +59,8 @@ class Game extends Phaser.Scene {
         this.tileSize = 32; // Adjust based on your tile images
         this.possibleTiles = [
             { type: "Grass", threshold: 0.3, key: "grass" },
+            { type: "Rock", threshold: 0.5, key: "rock" },
+            { type: "Bush", threshold: 0.4, key: "bush" },
             { type: "Mountain", threshold: 0.6, key: "mountain" },
             { type: "Tree", threshold: 0.8, key: "tree" },
             { type: "Water", threshold: 1.0, key: "water" }
@@ -36,10 +72,10 @@ class Game extends Phaser.Scene {
 
     preload() {
         // Load tile images
-        this.load.image("grass", "../assets/grass.png");
-        this.load.image("mountain", "../assets/mountain.png");
-        this.load.image("tree", "../assets/tree.png");
-        this.load.image("water", "../assets/water.png");
+        this.load.image("grass", "../assets/resources/grass/0.png");
+        this.load.image("mountain", "../assets/resources/mountain.png");
+        this.load.image("tree", "../assets/resources/forest.png");
+        this.load.image("water", "../assets/resources/water.png");
         console.log("Preloaded assets");
     }
 
@@ -62,10 +98,6 @@ class Game extends Phaser.Scene {
 
         // Initialize Network after game creation
         window.network = new Network(this); // Pass this scene to Network
-
-        // Generate world and create map
-        this.generateWorld(this.seed); // Generate world with a seed
-        this.createMap(); // Create the tilemap from generated world data
     }
 
     update() {
@@ -94,6 +126,7 @@ class Game extends Phaser.Scene {
 
     generateWorld(seed) {
         var noiseGenerator = new SimplexNoise(seed);
+        console.log("created noise map with seed", seed);
 
         for (let x = 0; x < this.worldSize; x++) {
             this.world[x] = [];
@@ -103,7 +136,7 @@ class Game extends Phaser.Scene {
                 this.world[x][y] = tileType;
             }
         }
-        console.log("World generated");
+        console.log("World successfully generated");
         return this.world;
     }
 
@@ -117,32 +150,28 @@ class Game extends Phaser.Scene {
     }
 
     createMap() {
-        const map = this.add.tilemap("map");
-        const tileset = map.addTilesetImage("tiles", "tiles");
-
-        // Create a layer for the tiles
-        const layer = map.createStaticLayer("Tile Layer 1", tileset, 0, 0);
-
-        // Set up the tile map with the generated world data
         for (let x = 0; x < this.worldSize; x++) {
             for (let y = 0; y < this.worldSize; y++) {
                 let tileType = this.world[x][y];
-                let tileIndex = this.getTileIndex(tileType);
-                layer.putTileAt(tileIndex, x, y);
+                let tileKey = this.getTileKey(tileType);
+    
+                // Place the tile image at the correct position
+                this.add.image(x * this.tileSize, y * this.tileSize, tileKey).setOrigin(0, 0);
             }
         }
     }
-
-    getTileIndex(type) {
-        // Map tile type to tile index; adjust according to your tile sheet
+    
+    getTileKey(type) {
+        // Map tile type to the corresponding image key
         switch (type) {
-            case "Grass": return 0; // Index for grass tile
-            case "Mountain": return 1; // Index for mountain tile
-            case "Tree": return 2; // Index for tree tile
-            case "Water": return 3; // Index for water tile
-            default: return 0;
+            case "Grass": return "grass";
+            case "Mountain": return "mountain";
+            case "Tree": return "tree";
+            case "Water": return "water";
+            default: return "grass"; // Default to grass if the type isn't recognized
         }
     }
+    
 }
 
 
@@ -197,6 +226,21 @@ class Player {
         network.send(JSON.stringify(data));
     }
 
+    /**
+    when player moves, make the world move around him instead.
+    though his position will be updated accoring to his "movement", so it will be displayed on 
+    other clients as if he is moving across the world. (the world will only move for them when they themselves move.)
+    repeat
+
+    error now when you move sinsce scprite or something isnt declaed or whatever.
+
+    use custom loaction stuff and click detection or just use sprite class?
+    handle sprite groups and collisions
+
+    upon exchaning position infromation, update player positions on eahc othres' client
+
+     */
+
     moveLeft() {
         this.sprite.setVelocityX(-160);
     }
@@ -242,11 +286,14 @@ class Network {
             switch (data.type) {
                 case "worldSeed":
                     const seed = data.seed;
+                    console.log("received seed: " + seed + " from server");
+                    console.log("generating world with seed: " + seed);
                     this.gameScene.generateWorld(seed);
+                    this.gameScene.createMap(); // Create the tilemap from generated world data
                     break;
                 case "playerLeave":
                     delete this.gameScene.playerList[data.UUID];
-                    console.log("Player left: " + data.player.name + " with UUID: " + data.UUID);
+                    console.log("Player with UUID: " + data.UUID + " left.");
                     break;
                 case "updatePlayer":
                     if (data.UUID == this.gameScene.localPlayer.UUID) return;

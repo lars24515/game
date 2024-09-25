@@ -116,13 +116,14 @@ class Network{
                         this.addPlayer(data.player, clientId);
 
                         // send world seed to client joined
-                        /*
-                        ws.send({
+                        //*
+                        console.log("sending word seed", worldSeed);
+                        ws.send(JSON.stringify({
                             type: "worldSeed",
                             seed: worldSeed,
-                        })
-                        */
-                        console.log("hello world");
+                        }));                        
+                        //*/
+                        console.log("done with client setup");
 
                         // updaetTile(position) upon mining tree
 
