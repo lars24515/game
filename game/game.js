@@ -58,13 +58,15 @@ class Game extends Phaser.Scene {
         this.chunkSize = 16;
         this.tileSize = 32; // Adjust based on your tile images
         this.possibleTiles = [
-            { type: "Grass", threshold: 0.3, key: "grass" },
-            { type: "Rock", threshold: 0.5, key: "rock" },
-            { type: "Bush", threshold: 0.4, key: "bush" },
-            { type: "Mountain", threshold: 0.6, key: "mountain" },
-            { type: "Tree", threshold: 0.8, key: "tree" },
-            { type: "Water", threshold: 1.0, key: "water" }
+            { type: "Grass", threshold: 0.1, key: "grass" },        // Most common
+            { type: "Water", threshold: 0.3, key: "water" },        // Some water bodies
+            { type: "Bush", threshold: 0.35, key: "bush" },         // Few bushes
+            { type: "Mountain", threshold: 0.3, key: "mountain" },  // Some mountains
+            { type: "Tree", threshold: 0.15, key: "tree" },          // Some trees, not excessive
+            { type: "Rock", threshold: 0.7, key: "stone" },            // 1/3 as many rocks as trees
+            { type: "Sand", threshold: 0.6, key: "stone" }     
         ];
+        
         this.seed = null;
         this.world = [];
         this.playerEvents = new Phaser.Events.EventEmitter();
@@ -73,7 +75,8 @@ class Game extends Phaser.Scene {
     preload() {
         // Load tile images
 
-        
+        // player
+        this.load.image("player", "../assets/player/still.png")
 
         this.load.image("grass0", "../assets/resources/grass/0.png");
         this.load.image("grass1", "../assets/resources/grass/1.png");
@@ -91,7 +94,9 @@ class Game extends Phaser.Scene {
     }
 
     create() {
-        this.localPlayer = new Player(username, "blue", this);
+        this.localPlayer = new Player(username, "blue", this, this.physics.add.sprite(100, 450, 'player').setOrigin(0.5, 0.5));
+        this.localPlayer.sprite.setDepth(5);
+        this.localPlayer.sprite.setScale(0.5)
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
 
         // textures
@@ -123,26 +128,18 @@ class Game extends Phaser.Scene {
         window.network = new Network(this); // Pass this scene to Network
     }
 
+    handleMovement(){
+        if (this.cursors.up.isDown || this.wasdKeys.up.isDown) {
+            this.localPlayer.move();
+        }
+    }
+
     update() {
         this.cameras.main.setBackgroundColor(0x25BE4B);
+        this.localPlayer.update(); // for methods such as calculating cursor position, etc.
 
         // Handle movement keys
-        if (this.cursors.left.isDown || this.wasdKeys.left.isDown) {
-            this.localPlayer.moveLeft();
-        } else if (this.cursors.right.isDown || this.wasdKeys.right.isDown) {
-            this.localPlayer.moveRight();
-        }
-
-        if (this.cursors.up.isDown || this.wasdKeys.up.isDown) {
-            this.localPlayer.moveUp();
-        } else if (this.cursors.down.isDown || this.wasdKeys.down.isDown) {
-            this.localPlayer.moveDown();
-        }
-
-        if (this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown ||
-            this.wasdKeys.left.isDown || this.wasdKeys.right.isDown || this.wasdKeys.up.isDown || this.wasdKeys.down.isDown) {
-            this.playerEvents.emit('move');
-        }
+        this.handleMovement(); // cleaner
 
         this.hotbar.render();
     }
@@ -186,7 +183,9 @@ class Game extends Phaser.Scene {
                
                 if (tileKey === "grass") {
                     this.add.image(x * this.tileSize, y * this.tileSize, this.getRandomElement(this.grassTextures)).setOrigin(0, 0);
-                } else{
+                } else if (tileKey == "tree") {
+                    this.add.image(x * this.tileSize, y * this.tileSize, tileKey).setOrigin(0, 1);
+                } else {
                     this.add.image(x * this.tileSize, y * this.tileSize, tileKey).setOrigin(0, 0);
                 }
 
@@ -204,18 +203,33 @@ class Game extends Phaser.Scene {
             default: return "grass"; // Default to grass if the type isn't recognized
         }
     }
+
+    moveWorld(xOffset, yOffset) {
+        for (let x = 0; x < this.scene.worldSize; x++) {
+            for (let y = 0; y < this.scene.worldSize; y++) {
+                const tile = this.scene.world[x][y];
+                console.log("moving tile", tile);
+                if (tile.sprite) {
+                    tile.sprite.x += xOffset;
+                    tile.sprite.y += yOffset;
+                }
+            }
+        }
+        //console.log("moved world");
+    }
     
 }
 
 
 class Player {
-    constructor(name, color, scene) {
+    constructor(name, color, scene, sprite) {
         this.name = name;
         this.color = color;
         this.scene = scene;
         this.velocity = 100;
         this.UUID = null;
-        this.sprite = null;
+        this.angleOffset = -90; // for some reason i need this
+        this.sprite = sprite;
 
         // Server object
         this.playerObject = {
@@ -235,11 +249,28 @@ class Player {
 
         let angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, mouseX, mouseY);
         let angleInDegrees = Phaser.Math.RadToDeg(angle);
-        console.log(angleInDegrees);
+        //console.log(angleInDegrees);
+        return angleInDegrees;
+    }
+
+    renderPlayerHand(angle){
+        this.sprite.angle = angle-this.angleOffset;
+        // set player origin to 0,0 so it rotates aorund itself instead of bottom (!)
+        // REWRITE MOVEMENT SYSTEM
+
+        /*
+
+        player movement system:
+
+        when moving: change all tile position by -player.velocity in player.angle direction.
+        update player object (and server) with new position ONLY using player.velocity.
+
+        */
+
     }
 
     update() {
-        this.calculateHandAngle(this.scene);
+        this.renderPlayerHand(this.calculateHandAngle(this.scene));
     }
 
     onPlayerMove() {
@@ -274,25 +305,17 @@ class Player {
 
      */
 
-    moveLeft() {
-        this.sprite.setVelocityX(-160);
-    }
+    move() {
+        let angleInRadians = Phaser.Math.DegToRad(this.sprite.angle + this.angleOffset);
 
-    moveRight() {
-        this.sprite.setVelocityX(160);
-    }
+        let deltaX = Math.cos(angleInRadians) * this.velocity;
+        let deltaY = Math.sin(angleInRadians) * this.velocity;
 
-    moveUp() {
-        this.sprite.setVelocityY(-160);
+        this.scene.moveWorld(-deltaX, -deltaY);
+        //console.log("moved worl");
+        this.onPlayerMove();
     }
-
-    moveDown() {
-        this.sprite.setVelocityY(160);
-    }
-
-    stop() {
-        this.sprite.setVelocity(0);
-    }
+    
 }
 
 class Network {
@@ -354,6 +377,7 @@ class Network {
     handlePlayerJoined(data) {
         this.gameScene.playerList[data.UUID] = data.player;
         console.log("Player joined: " + data.player.name + " with UUID: " + data.UUID);
+        // create sprite, etc. add to dict to be individually updated from events.
     }
 
     send(data) {
@@ -372,6 +396,9 @@ class Hotbar {
         this.slotSize = 32;
         this.itemSize = 25;
         this.maxSlotCount = 9;
+
+        // Ensure the hotbar is drawn above the map
+        this.graphics.setDepth(10);  // A higher depth value for the hotbar
     }
 
     selectSlot(slot) {
@@ -396,6 +423,7 @@ class Hotbar {
         }
     }
 }
+
 
 const config = {
     type: Phaser.AUTO,
