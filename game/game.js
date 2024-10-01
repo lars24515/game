@@ -99,6 +99,13 @@ class Game extends Phaser.Scene {
         this.localPlayer.sprite.setScale(0.5)
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
 
+        // camera
+
+        this.cameras.main.setBounds(0, 0, this.worldSize * this.tileSize, this.worldSize * this.tileSize); // Set bounds to match world size
+        this.cameras.main.startFollow(this.localPlayer.sprite, true, 0.1, 0.1); // Smooth follow
+
+
+
         // textures
 
         this.grassTextures = [
@@ -204,19 +211,25 @@ class Game extends Phaser.Scene {
         }
     }
 
+    /*
     moveWorld(xOffset, yOffset) {
-        for (let x = 0; x < this.scene.worldSize; x++) {
-            for (let y = 0; y < this.scene.worldSize; y++) {
-                const tile = this.scene.world[x][y];
-                console.log("moving tile", tile);
+        for (let x = 0; x < this.worldSize; x++) {
+            console.log("for");
+            for (let y = 0; y < this.worldSize; y++) {
+                console.log("const tile");
+                const tile = this.world[x][y];
+                console.log("moving tile", tile);   
+
                 if (tile.sprite) {
                     tile.sprite.x += xOffset;
                     tile.sprite.y += yOffset;
+                    console.log("moved tile", tile.sprite);
                 }
             }
         }
         //console.log("moved world");
     }
+        */
     
 }
 
@@ -226,7 +239,7 @@ class Player {
         this.name = name;
         this.color = color;
         this.scene = scene;
-        this.velocity = 100;
+        this.velocity = 150;
         this.UUID = null;
         this.angleOffset = -90; // for some reason i need this
         this.sprite = sprite;
@@ -271,6 +284,9 @@ class Player {
 
     update() {
         this.renderPlayerHand(this.calculateHandAngle(this.scene));
+        if (!this.scene.wasdKeys.up.isDown) {
+            this.sprite.setVelocity(0, 0);
+        }
     }
 
     onPlayerMove() {
@@ -311,8 +327,12 @@ class Player {
         let deltaX = Math.cos(angleInRadians) * this.velocity;
         let deltaY = Math.sin(angleInRadians) * this.velocity;
 
-        this.scene.moveWorld(-deltaX, -deltaY);
+       // this.scene.moveWorld(-deltaX, -deltaY);
         //console.log("moved worl");
+
+        this.sprite.setVelocity(deltaX, deltaY);
+
+
         this.onPlayerMove();
     }
     
