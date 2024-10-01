@@ -61,10 +61,10 @@ class Game extends Phaser.Scene {
             { type: "Grass", threshold: 0.1, key: "grass" },        // Most common
             { type: "Water", threshold: 0.3, key: "water" },        // Some water bodies
             { type: "Bush", threshold: 0.35, key: "bush" },         // Few bushes
-            { type: "Mountain", threshold: 0.3, key: "mountain" },  // Some mountains
+            { type: "Mountain", threshold: 0.32, key: "mountain" },  // Some mountains
             { type: "Tree", threshold: 0.15, key: "tree" },          // Some trees, not excessive
-            { type: "Rock", threshold: 0.7, key: "stone" },            // 1/3 as many rocks as trees
-            { type: "Sand", threshold: 0.6, key: "stone" }     
+            { type: "Stone", threshold: 0.5, key: "stone" },            // 1/3 as many rocks as trees
+            { type: "Sand", threshold: 0.6, key: "sand" }     
         ];
         
         this.seed = null;
@@ -77,7 +77,7 @@ class Game extends Phaser.Scene {
 
         // player
         this.load.image("player", "../assets/player/still.png")
-
+ 
         this.load.image("grass0", "../assets/resources/grass/0.png");
         this.load.image("grass1", "../assets/resources/grass/1.png");
         this.load.image("grass2", "../assets/resources/grass/2.png");
@@ -90,6 +90,10 @@ class Game extends Phaser.Scene {
         this.load.image("mountain", "../assets/resources/mountain.png");
         this.load.image("tree", "../assets/resources/forest.png");
         this.load.image("water", "../assets/resources/water.png");
+        this.load.image("sand", "../assets/resources/sand.png");
+        this.load.image("stone", "../assets/resources/stone.png");
+        this.load.image("bush", "../assets/resources/bush.png");
+        this.load.image("flower", "../assets/resources/flower.png");
         console.log("Preloaded assets");
     }
 
@@ -148,6 +152,8 @@ class Game extends Phaser.Scene {
         // Handle movement keys
         this.handleMovement(); // cleaner
 
+        
+
         this.hotbar.render();
     }
 
@@ -186,6 +192,7 @@ class Game extends Phaser.Scene {
             for (let y = 0; y < this.worldSize; y++) {
                 let tileType = this.world[x][y];
                 let tileKey = this.getTileKey(tileType);
+                //console.log("Tile: " + tileKey + " at (" + x + ", " + y + ")");
     
                
                 if (tileKey === "grass") {
@@ -207,6 +214,8 @@ class Game extends Phaser.Scene {
             case "Mountain": return "mountain";
             case "Tree": return "tree";
             case "Water": return "water";
+            case "Stone": return "stone";
+            case "Sand": return "sand";
             default: return "grass"; // Default to grass if the type isn't recognized
         }
     }
@@ -340,7 +349,7 @@ class Player {
 
 class Network {
     constructor(gameScene) {
-        this.gameScene = gameScene;
+        this.gameScene = gameScene; 
         this.socket = new WebSocket('ws://localhost:8080');
         this.socket.onopen = function(event) {
             console.log('Connected to WebSocket server');
@@ -357,6 +366,8 @@ class Network {
             window.location.href = "../src/index.html";
         };
 
+        
+
         this.socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
             switch (data.type) {
@@ -367,6 +378,22 @@ class Network {
                     this.gameScene.generateWorld(seed);
                     this.gameScene.createMap(); // Create the tilemap from generated world data
                     break;
+                
+                case "playerList":
+                    /*
+                    for otherPlayer in data.playerList:
+                        if otherPlayer.UUID not in this.gameScene.playerList:
+                            this.handlePlayerJoined(otherPlayer);
+                     */
+
+                    for (let key in data.playerList) {
+                        if (!this.gameScene.playerList[key]) {
+                            console.log("plyer didnt exist, adding");
+                            this.handlePlayerJoined(data.playerList[key]);
+                        }
+                    }
+
+                    break;
                 case "playerLeave":
                     delete this.gameScene.playerList[data.UUID];
                     console.log("Player with UUID: " + data.UUID + " left.");
@@ -374,9 +401,7 @@ class Network {
                 case "updatePlayer":
                     if (data.UUID == this.gameScene.localPlayer.UUID) return;
                     if (data.property == "position") {
-                        this.gameScene.playerList[data.UUID].x = data.x;
-                        this.gameScene.playerList[data.UUID].y = data.y;
-                        console.log(`Updated ${data.player.name}'s position to: ${data.x}, ${data.y}`);
+                        this.updatePlayerPosition(data);
                     }
                     break;
                 case "playerJoined":
@@ -394,11 +419,37 @@ class Network {
         }.bind(this);
     }
 
-    handlePlayerJoined(data) {
-        this.gameScene.playerList[data.UUID] = data.player;
-        console.log("Player joined: " + data.player.name + " with UUID: " + data.UUID);
-        // create sprite, etc. add to dict to be individually updated from events.
+    updatePlayerPosition(data){
+        console.log(this.gameScene.playerList);
+        this.gameScene.playerList[data.UUID].sprite.x = data.x;
+        this.gameScene.playerList[data.UUID].sprite.y = data.y;
     }
+
+    handlePlayerJoined(data) {
+        const { UUID, player } = data;
+        
+        // Check if player already exists in playerList
+        if (this.gameScene.playerList[UUID]) return;
+        
+        // Create a sprite for the new player
+        let newPlayerSprite = this.gameScene.physics.add.sprite(100, 100, 'player');
+        newPlayerSprite.setOrigin(0.5, 0.5);
+        newPlayerSprite.setScale(0.5);
+        
+        // Add the player sprite to the players group
+        this.gameScene.players.add(newPlayerSprite);
+        
+        // Add the new player to the player list
+        this.gameScene.playerList[UUID] = {
+            sprite: newPlayerSprite,
+            //name: player.name,
+            //color: player.color,
+            UUID: UUID
+        };
+    
+        console.log("Player joined: ", UUID);
+    }
+    
 
     send(data) {
         this.socket.send(data);

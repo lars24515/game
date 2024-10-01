@@ -72,7 +72,7 @@ class Network{
             });
         
             ws.on('message', (message) => {
-                console.log(message.toString()); 
+               //  console.log(message.toString()); 
                 const data = JSON.parse(message);  
 
                 switch (data.type) {
@@ -112,6 +112,13 @@ class Network{
 
                         // now that we've told other clients to add to playelist
                         // server needs to as well
+
+                        // SEND EXISTING PLAYERLIST TO NEW PLAYER.
+
+                        ws.send(JSON.stringify({
+                            type: "playerList",
+                            playerList: this.playerObjects,
+                        }))
                         
                         this.addPlayer(data.player, clientId);
 
