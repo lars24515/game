@@ -56,15 +56,12 @@ class Game extends Phaser.Scene {
         this.playerList = {};
         this.worldSize = 50;
         this.chunkSize = 16;
-        this.tileSize = 32; // Adjust based on your tile images
+        this.tileSize = 64; // Adjust based on your tile images
         this.possibleTiles = [
-            { type: "Grass", threshold: 0.1, key: "grass" },        // Most common
-            { type: "Water", threshold: 0.3, key: "water" },        // Some water bodies
-            { type: "Bush", threshold: 0.35, key: "bush" },         // Few bushes
-            { type: "Mountain", threshold: 0.32, key: "mountain" },  // Some mountains
-            { type: "Tree", threshold: 0.15, key: "tree" },          // Some trees, not excessive
-            { type: "Stone", threshold: 0.5, key: "stone" },            // 1/3 as many rocks as trees
-            { type: "Sand", threshold: 0.6, key: "sand" }     
+            { type: "Grass", threshold: 0.2, key: "grass" },        // Most common
+            { type: "Water", threshold: 0.3, key: "water" },        // Some water bodies       // Few bushes
+            { type: "Mountain", threshold: 0.15, key: "mountain" },  // Some mountains
+            { type: "Sand", threshold: 0.35, key: "sand" }     
         ];
         
         this.seed = null;
@@ -108,7 +105,7 @@ class Game extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, this.worldSize * this.tileSize, this.worldSize * this.tileSize); // Set bounds to match world size
         this.cameras.main.startFollow(this.localPlayer.sprite, true, 0.1, 0.1); // Smooth follow
 
-
+        this.input.on('pointermove', this.handleTileHover.bind(this));
 
         // textures
 
@@ -139,6 +136,21 @@ class Game extends Phaser.Scene {
         window.network = new Network(this); // Pass this scene to Network
     }
 
+    handleTileHover(pointer) {
+        // Convert pointer (mouse) position to tile coordinates
+        const tileX = Math.floor(pointer.worldX / this.tileSize);
+        const tileY = Math.floor(pointer.worldY / this.tileSize);
+    
+        // Ensure we're within the world bounds
+        /*
+        if (tileX >= 0 && tileX < this.worldSize && tileY >= 0 && tileY < this.worldSize) {
+            const tileType = this.world[tileX][tileY];
+            console.log(`Hovering over tile: Type = ${tileType}, Coordinates = (${tileX}, ${tileY})`);
+        }
+            */
+    }
+    
+
     handleMovement(){
         if (this.cursors.up.isDown || this.wasdKeys.up.isDown) {
             this.localPlayer.move();
@@ -151,10 +163,11 @@ class Game extends Phaser.Scene {
 
         // Handle movement keys
         this.handleMovement(); // cleaner
-
         
 
         this.hotbar.render();
+
+        this.renderDisplayNames();
     }
 
     generateWorld(seed) {
@@ -173,6 +186,12 @@ class Game extends Phaser.Scene {
         return this.world;
     }
 
+    getRandom(chance) {
+        return Math.random() < chance; // 'chance' is a value between 0 and 1
+    }
+    
+    
+
     getTileType(noiseValue) {
         let normalizedValue = (noiseValue + 1) / 2;
         for (let tile of this.possibleTiles) {
@@ -187,6 +206,46 @@ class Game extends Phaser.Scene {
         return array[randomIndex];
     }
 
+    addTile(x, y, tileKey) {
+        let tileImage;
+        
+        if (tileKey === "grass") {
+            tileImage = this.add.image(x * this.tileSize, y * this.tileSize, this.getRandomElement(this.grassTextures));
+            tileImage.setOrigin(0, 0);
+        } else if (tileKey === "tree") {
+            tileImage = this.add.image(x * this.tileSize, y * this.tileSize, tileKey);
+            tileImage.setOrigin(0.5, 1);
+        } else {
+            tileImage = this.add.image(x * this.tileSize, y * this.tileSize, tileKey);
+            tileImage.setOrigin(0.5, 0.5);
+        }
+        
+        // Resizing every tile to 32x32
+        tileImage.setDisplaySize(this.tileSize, this.tileSize);
+
+        if (tileKey === "sand") {
+            tileImage.setOrigin(0, 0);  
+            tileImage.setDisplaySize(this.tileSize, this.tileSize);
+        }
+        
+
+        if (tileKey === "tree") {
+            tileImage.setDisplaySize(128, 256);
+            tileImage.setDepth(1);
+        }
+        if (tileKey === "stone") {
+            if (this.getRandom(0.5)) {
+                tileImage.setDisplaySize(64, 64);
+            } else {
+                tileImage.setDisplaySize(80, 80);
+            }
+            
+        }
+
+        tileImage.setDepth(1);
+
+    }    
+
     createMap() {
         for (let x = 0; x < this.worldSize; x++) {
             for (let y = 0; y < this.worldSize; y++) {
@@ -194,18 +253,41 @@ class Game extends Phaser.Scene {
                 let tileKey = this.getTileKey(tileType);
                 //console.log("Tile: " + tileKey + " at (" + x + ", " + y + ")");
     
-               
-                if (tileKey === "grass") {
-                    this.add.image(x * this.tileSize, y * this.tileSize, this.getRandomElement(this.grassTextures)).setOrigin(0, 0);
-                } else if (tileKey == "tree") {
-                    this.add.image(x * this.tileSize, y * this.tileSize, tileKey).setOrigin(0, 1);
-                } else {
-                    this.add.image(x * this.tileSize, y * this.tileSize, tileKey).setOrigin(0, 0);
-                }
+                this.addTile(x, y, tileKey);
 
+                if (this.getRandom(0.05) && tileKey === "grass") {
+                    // add tree
+                    this.addTile(x, y, "tree");
+                }
+                if (this.getRandom(0.02) && tileKey === "grass") {
+                    // add tree
+                    this.addTile(x, y, "stone");
+                }
             }
         }
     }
+
+    renderDisplayNames() {
+        // Iterate through all players in the player list
+        for (let UUID in this.playerList) {
+            const player = this.playerList[UUID];
+    
+            // Check if a display name text object already exists
+            if (!player.nameText) {
+                // Create and store the name text object above the player sprite
+                player.nameText = this.add.text(
+                    player.sprite.x, 
+                    player.sprite.y - 20,  // Slightly above the sprite
+                    player.name,            // Display player name
+                    { font: '25px Arial', fill: '#fff', align: 'center' }
+                ).setOrigin(0.5, 2).setDepth(10); // Center align, above other objects
+            }
+    
+            // Update the text object's position to follow the player's sprite
+            player.nameText.setPosition(player.sprite.x, player.sprite.y - 20);
+        }
+    }
+    
     
     getTileKey(type) {
         // Map tile type to the corresponding image key
@@ -216,6 +298,8 @@ class Game extends Phaser.Scene {
             case "Water": return "water";
             case "Stone": return "stone";
             case "Sand": return "sand";
+            case "Bush": return "bush";
+            case "Flower": return "flower";
             default: return "grass"; // Default to grass if the type isn't recognized
         }
     }
