@@ -81,24 +81,10 @@ class Network{
                         
                         switch (data.property) {
                             case "position":
-
-                                // update server
-                                this.playerObjects[data.UUID].x = data.x;
-                                this.playerObjects[data.UUID].y = data.y;
-
-                                // update al clients
-                                this.broadcast({
-                                    type: "updatePlayer",
-                                    UUID: data.UUID,
-                                    property: "position",
-                                    x: data.x,
-                                    y: data.y,
-                                })
-                                
+                                //console.log("received playerPosition from", data.UUID);
+                                this.updatePlayerPosition(data);
                                 break;
-
-                                // ERROR IN EXCHANGING  POSTION VALUE 
-
+                            // other properties as well
                         }
                         break;
 
@@ -115,10 +101,13 @@ class Network{
 
                         // SEND EXISTING PLAYERLIST TO NEW PLAYER.
 
+                        // do not send playerlist with self incldued
                         ws.send(JSON.stringify({
                             type: "playerList",
                             playerList: this.playerObjects,
                         }))
+                        console.log("sent playerlist", this.playerObjects);
+                        
                         
                         this.addPlayer(data.player, clientId);
 
@@ -145,6 +134,30 @@ class Network{
         
             
         });
+    }
+
+    updatePlayerPosition(data){
+      //  console.log(this.playerObjects); // debug
+        // const playerIndex = this.playerObjects[data.UUID];
+
+      //  console.log("UUID =", data.UUID);
+      //  console.log("playerList =", this.playerObjects);
+
+        const playerIndex = this.playerObjects[data.UUID];
+
+        playerIndex.x = data.x;
+        playerIndex.y = data.y;
+        // done updating server playerlist, time to update the other clients as well
+
+        this.broadcast({
+            type: "updatePlayer",
+            UUID: data.UUID,
+            property: "position",
+            x: data.x,
+            y: data.y,
+        });
+        // done
+
     }
 
     removePlayer(UUID) {

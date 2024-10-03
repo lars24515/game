@@ -256,11 +256,11 @@ class Player {
         // Server object
         this.playerObject = {
             name: name,
-            color: color,
+           // color: color,
             x: 0,
             y: 0,
-            facing: "",
-            holding: "",
+         //   facing: "",
+          //  holding: "",
         };
     }
 
@@ -301,16 +301,15 @@ class Player {
     onPlayerMove() {
         this.playerObject.x = this.sprite.x;
         this.playerObject.y = this.sprite.y;
-        this.playerObject.facing = this.sprite.facing;
-        this.playerObject.holding = this.sprite.holding;
+        let angle = this.sprite.angle;
 
         let data = {
-            UUID: this.UUID,
+            UUID: this.UUID, // is this undefined? cant be?
             type: 'updatePlayer',
             property: "position",
             x: this.sprite.x,
             y: this.sprite.y,
-            facing: this.playerObject.facing,
+            angle: angle,
         };
         network.send(JSON.stringify(data));
     }
@@ -387,10 +386,16 @@ class Network {
                      */
 
                     for (let key in data.playerList) {
+                        const value = data.playerList[key];
+                        console.log("key =", key);
+                        console.log("value =", data.playerList[key]);
+
+                        // if not UUID (key) in playerList, run
+                        // handlePlayerJoined on player object
                         if (!this.gameScene.playerList[key]) {
-                            console.log("plyer didnt exist, adding");
-                            this.handlePlayerJoined(data.playerList[key]);
+                            this.handlePlayerJoined(key, value);
                         }
+
                     }
 
                     break;
@@ -405,12 +410,24 @@ class Network {
                     }
                     break;
                 case "playerJoined":
+
+                    // make sure player isnt itself, and if it is, retreive UUID from it.
                     if (data.player.name == this.gameScene.localPlayer.name) {
-                        this.gameScene.localPlayer.UUID = data.UUID;
-                        console.log("My UUID is: " + this.gameScene.localPlayer.UUID);
-                        return;
+                        this.gameScene.localPlayer.UUID = data.UUID; // set self UUID
+                        return; // no further inquiries
                     }
-                    this.handlePlayerJoined(data);
+
+                // player is someone else than itself, check if it already exists in list
+
+                    if (this.gameScene.playerList[data.UUID]){
+                        console.log("Player with UUID: " + data.UUID + " already exists.");
+                        return;
+                    }; //player exists
+
+                    // player didnt exist, so handle the player join
+
+                    this.handlePlayerJoined(data.UUID, data.player);
+                    
                     break;
                 default:
                     console.log("Unknown message type:", data.type);
@@ -423,31 +440,32 @@ class Network {
         console.log(this.gameScene.playerList);
         this.gameScene.playerList[data.UUID].sprite.x = data.x;
         this.gameScene.playerList[data.UUID].sprite.y = data.y;
+        console.log("updated player position: ", data.UUID);
     }
 
-    handlePlayerJoined(data) {
-        const { UUID, player } = data;
-        
-        // Check if player already exists in playerList
-        if (this.gameScene.playerList[UUID]) return;
-        
-        // Create a sprite for the new player
-        let newPlayerSprite = this.gameScene.physics.add.sprite(100, 100, 'player');
-        newPlayerSprite.setOrigin(0.5, 0.5);
-        newPlayerSprite.setScale(0.5);
-        
-        // Add the player sprite to the players group
+    createSprite(origin, scale, image){
+        let sprite = this.gameScene.physics.add.sprite(100, 100, image);
+        sprite.setOrigin(origin, origin);
+        sprite.setScale(scale);
+        sprite.setDepth(10);
+        return sprite;
+    }
+
+    handlePlayerJoined(UUID, playerObject) {
+
+        // Create a sprite for the new player and add to sprite playergroup
+        let newPlayerSprite = this.createSprite(0.5, 0.5, "player");
         this.gameScene.players.add(newPlayerSprite);
-        
-        // Add the new player to the player list
+        // Add the new player to local playerlist
         this.gameScene.playerList[UUID] = {
             sprite: newPlayerSprite,
-            //name: player.name,
-            //color: player.color,
-            UUID: UUID
+            name: playerObject.name,
+            UUID: UUID,
+            x: playerObject.x,
+            y: playerObject.y
         };
     
-        console.log("Player joined: ", UUID);
+        console.log("Player joined: ", playerObject.name, "with UUID:", UUID);
     }
     
 
