@@ -155,6 +155,7 @@ class Network{
             property: "position",
             x: data.x,
             y: data.y,
+            angle: data.angle,
         });
         // done
 

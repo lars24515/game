@@ -387,8 +387,8 @@ class Network {
 
                     for (let key in data.playerList) {
                         const value = data.playerList[key];
-                        console.log("key =", key);
-                        console.log("value =", data.playerList[key]);
+                       // console.log("key =", key);
+                      //  console.log("value =", data.playerList[key]);
 
                         // if not UUID (key) in playerList, run
                         // handlePlayerJoined on player object
@@ -437,10 +437,11 @@ class Network {
     }
 
     updatePlayerPosition(data){
-        console.log(this.gameScene.playerList);
+      //  console.log(this.gameScene.playerList);
         this.gameScene.playerList[data.UUID].sprite.x = data.x;
         this.gameScene.playerList[data.UUID].sprite.y = data.y;
-        console.log("updated player position: ", data.UUID);
+        this.gameScene.playerList[data.UUID].sprite.angle = data.angle;
+       // console.log("updated player position: ", data.UUID);
     }
 
     createSprite(origin, scale, image){
@@ -462,7 +463,8 @@ class Network {
             name: playerObject.name,
             UUID: UUID,
             x: playerObject.x,
-            y: playerObject.y
+            y: playerObject.y,
+            angle: 0,
         };
     
         console.log("Player joined: ", playerObject.name, "with UUID:", UUID);
