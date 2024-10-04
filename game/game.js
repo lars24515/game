@@ -44,6 +44,13 @@ function getAssets(data){
     } 
 }
 
+
+
+ideer
+
+
+sykdommer, % sjanse å få fra å gjøre forskjellige ting, som å drikke ukokt vann.
+
 */
 
 // Define the Game class first
@@ -55,6 +62,8 @@ class Game extends Phaser.Scene {
         this.players = null;
         this.playerList = {};
         this.worldSize = 50;
+        this.staticImageSize = 32;
+        this.staticImageDepth = 20; // should be above most other images.. maybe create a map list for this sometime?
         this.chunkSize = 16;
         this.tileSize = 64; // Adjust based on your tile images
         this.possibleTiles = [
@@ -73,7 +82,8 @@ class Game extends Phaser.Scene {
         // Load tile images
 
         // player
-        this.load.image("player", "../assets/player/still.png")
+        this.load.image("player", "../assets/player/new still.png");
+        this.load.image("playerHolding", "../assets/player/holding.png");
  
         this.load.image("grass0", "../assets/resources/grass/0.png");
         this.load.image("grass1", "../assets/resources/grass/1.png");
@@ -91,6 +101,13 @@ class Game extends Phaser.Scene {
         this.load.image("stone", "../assets/resources/stone.png");
         this.load.image("bush", "../assets/resources/bush.png");
         this.load.image("flower", "../assets/resources/flower.png");
+
+
+        // item images
+        this.load.image("woodenSword", "../assets/items/wooden_sword.png");
+        this.load.image("woodenPickaxe", "../assets/items/wooden_pickaxe.png");
+        this.load.image("woodenAxe", "../assets/items/wooden_axe.png");
+
         console.log("Preloaded assets");
     }
 
@@ -127,13 +144,69 @@ class Game extends Phaser.Scene {
             right: Phaser.Input.Keyboard.KeyCodes.D
         });
 
+        let KeyCodes = Phaser.Input.Keyboard.KeyCodes; // reference
+
+        this.hotbarKeys = this.input.keyboard.addKeys({
+            1: KeyCodes.ONE,
+            2: KeyCodes.TWO,
+            3: KeyCodes.THREE,
+            4: KeyCodes.FOUR,
+            5: KeyCodes.FIVE,
+            6: KeyCodes.SIX,
+            7: KeyCodes.SEVEN,
+            8: KeyCodes.EIGHT,
+            9: KeyCodes.NINE,
+
+        });
+
         this.players = this.physics.add.group();
         this.hotbar = new Hotbar(this);
         this.hotbar.render();
+
+        this.hotbar.addItemToHotbar("woodenSword");
+        this.hotbar.addItemToHotbar("woodenPickaxe");
+        this.hotbar.addItemToHotbar("woodenAxe");
+
         console.log("Created game assets");
 
         // Initialize Network after game creation
         window.network = new Network(this); // Pass this scene to Network
+    }
+
+    updateOtherClientsHolding(){
+        for (let player of Object.values(this.playerList)) {
+            let image = player.holdingImage;
+            if (!player.holding) return;   
+            // player is holding something, render it
+            if (!player.holdingImage){
+                // player is holding something, but no image is present
+
+                let holdingImage = this.scene.add.image(this.sprite.x, this.sprite.y, image);
+
+                holdingImage.setDepth(50);
+                player.holdingImage = image;
+
+                player.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
+                console.log("set player image for", player.UUID);
+
+            }
+            // image is present and player is holding something
+            // update the position
+
+            let angleInRadians = Phaser.Math.DegToRad(player.angle);
+    
+            let offsetX = Math.cos(angleInRadians) * this.localPlayer.offsetDistance;
+            let offsetY = Math.sin(angleInRadians) * this.localPlayer.offsetDistance;
+    
+            // Set position of the holding image in front of the player
+            player.holdingImage.setPosition(player.sprite.x + offsetX, player.sprite.y + offsetY);
+            player.holdingImage.setOrigin(0, 0.3);
+            
+            // Set the holding image's angle to exactly match the player's angle
+            player.holdingImage.setAngle(player.angle - 45);
+
+
+        }
     }
 
     handleTileHover(pointer) {
@@ -163,12 +236,32 @@ class Game extends Phaser.Scene {
 
         // Handle movement keys
         this.handleMovement(); // cleaner
+
+        this.handleHotbarKeys();
         
 
         this.hotbar.render();
 
+        this.updateOtherClientsHolding();
         this.renderDisplayNames();
     }
+
+    handleKeyDown(key){
+        if (this.hotbarKeys[key]){ // key is either 1, 2, 3..
+            if (key == this.hotbar.selectedSlot+1) return; 
+            // no need to select same slot multiple times
+            this.hotbar.selectSlot(key - 1); // select slot
+        }
+    }
+
+    handleHotbarKeys() {
+        for (const key in this.hotbarKeys) {
+            if (this.hotbarKeys[key].isDown) {
+                this.handleKeyDown(key);
+            }
+        }
+    }
+
 
     generateWorld(seed) {
         var noiseGenerator = new SimplexNoise(seed);
@@ -304,26 +397,26 @@ class Game extends Phaser.Scene {
         }
     }
 
-    /*
-    moveWorld(xOffset, yOffset) {
-        for (let x = 0; x < this.worldSize; x++) {
-            console.log("for");
-            for (let y = 0; y < this.worldSize; y++) {
-                console.log("const tile");
-                const tile = this.world[x][y];
-                console.log("moving tile", tile);   
-
-                if (tile.sprite) {
-                    tile.sprite.x += xOffset;
-                    tile.sprite.y += yOffset;
-                    console.log("moved tile", tile.sprite);
-                }
-            }
-        }
-        //console.log("moved world");
+    createStaticImage(imageKey, x, y) {
+        let image = this.add.image(x, y, imageKey);
+        console.log("Created static image: " + imageKey + " at (" + x + ", " + y + ")");
+        console.log("image=", image);
+        image.setOrigin(0.5, 0.5);
+        image.setDisplaySize(this.staticImageSize, this.staticImageSize);
+        image.setDepth(this.staticImageDepth);
+        return image;
     }
-        */
     
+}
+
+class Item {
+    constructor(gameScene, itemType, x, y){
+        this.image = gameScene.createStaticImage(itemType, x, y);
+    }
+
+    destroy(){
+        this.image.destroy();
+    }
 }
 
 
@@ -335,7 +428,10 @@ class Player {
         this.velocity = 150;
         this.UUID = null;
         this.angleOffset = -90; // for some reason i need this
+        this.offsetDistance = 32;
         this.sprite = sprite;
+        //this.hand = scene.createStaticImage("playerHand", 0, 0);
+        this.holdingImage = null;
 
         // Server object
         this.playerObject = {
@@ -344,9 +440,74 @@ class Player {
             x: 0,
             y: 0,
          //   facing: "",
-          //  holding: "",
+            holding: "",
         };
     }
+
+    renderHolding() {
+        if (this.holdingImage) {
+
+            let angleInRadians = Phaser.Math.DegToRad(this.sprite.angle + this.angleOffset);
+    
+            let offsetX = Math.cos(angleInRadians) * this.offsetDistance;
+            let offsetY = Math.sin(angleInRadians) * this.offsetDistance;
+    
+            // Set position of the holding image in front of the player
+            this.holdingImage.setPosition(this.sprite.x + offsetX, this.sprite.y + offsetY);
+            this.holdingImage.setOrigin(0, 0.3);
+            
+            // Set the holding image's angle to exactly match the player's angle
+            this.holdingImage.setAngle(this.sprite.angle - 45);
+        }
+    }
+    
+    
+
+    setHoldImage(image){
+        if (this.holdingImage){
+            this.holdNothing();
+        }
+        // Create the holding image and set its position
+        this.holdingImage = this.scene.add.image(this.sprite.x, this.sprite.y, image);
+        this.holdingImage.setDepth(50);
+        //this.holdingImage.setScale(1);
+        
+        // Update the player object with the current holding image
+        this.playerObject.holding = image;
+        
+        // Optionally update the player's main sprite texture
+        this.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
+        console.log("set player image", image);
+
+        // update server
+
+        let data = {
+            UUID: this.UUID,
+            type: "updatePlayer",
+            property: "holding",
+            value: image,
+        };
+
+        network.send(JSON.stringify(data));
+        console.log("sent holding to server");
+
+    }
+
+    holdNothing(){
+        this.holdingImage.destroy();
+        this.holdingImage = null;
+        this.playerObject.holding = "";
+        this.sprite.setTexture("player");
+
+        let data = {
+            UUID: this.UUID,
+            type: "updatePlayer",
+            property: "holding",
+            value: "Nothing",
+        };
+        network.send(JSON.stringify(data));
+    }
+    
 
     calculateHandAngle(scene) {
         let pointer = scene.input.activePointer;
@@ -361,17 +522,6 @@ class Player {
 
     renderPlayerHand(angle){
         this.sprite.angle = angle-this.angleOffset;
-        // set player origin to 0,0 so it rotates aorund itself instead of bottom (!)
-        // REWRITE MOVEMENT SYSTEM
-
-        /*
-
-        player movement system:
-
-        when moving: change all tile position by -player.velocity in player.angle direction.
-        update player object (and server) with new position ONLY using player.velocity.
-
-        */
 
     }
 
@@ -380,6 +530,7 @@ class Player {
         if (!this.scene.wasdKeys.up.isDown) {
             this.sprite.setVelocity(0, 0);
         }
+        this.renderHolding();
     }
 
     onPlayerMove() {
@@ -397,21 +548,6 @@ class Player {
         };
         network.send(JSON.stringify(data));
     }
-
-    /**
-    when player moves, make the world move around him instead.
-    though his position will be updated accoring to his "movement", so it will be displayed on 
-    other clients as if he is moving across the world. (the world will only move for them when they themselves move.)
-    repeat
-
-    error now when you move sinsce scprite or something isnt declaed or whatever.
-
-    use custom loaction stuff and click detection or just use sprite class?
-    handle sprite groups and collisions
-
-    upon exchaning position infromation, update player positions on eahc othres' client
-
-     */
 
     move() {
         let angleInRadians = Phaser.Math.DegToRad(this.sprite.angle + this.angleOffset);
@@ -489,9 +625,16 @@ class Network {
                     break;
                 case "updatePlayer":
                     if (data.UUID == this.gameScene.localPlayer.UUID) return;
-                    if (data.property == "position") {
-                        this.updatePlayerPosition(data);
+            
+                    switch(data.property) {
+                        case "position":
+                            this.updatePlayerPosition(data);
+                            break;
+                        case "holding":
+                            this.updatePlayerHolding(data);
+                            break;
                     }
+
                     break;
                 case "playerJoined":
 
@@ -518,6 +661,16 @@ class Network {
                     break;
             }
         }.bind(this);
+    }
+
+    updatePlayerHolding(data){
+        console.log("received holding data from", data.UUID);
+        if (data.value == "Nothing"){
+            return;
+        } else {
+            this.gameScene.playerList[data.UUID].holding = data.holding;
+            console.log("set holding");
+        }
     }
 
     updatePlayerPosition(data){
@@ -548,7 +701,8 @@ class Network {
             UUID: UUID,
             x: playerObject.x,
             y: playerObject.y,
-            angle: 0,
+            holding: "",
+            holdingImage: "",
         };
     
         console.log("Player joined: ", playerObject.name, "with UUID:", UUID);
@@ -571,13 +725,85 @@ class Hotbar {
         this.slotSize = 32;
         this.itemSize = 25;
         this.maxSlotCount = 9;
-
-        // Ensure the hotbar is drawn above the map
-        this.graphics.setDepth(10);  // A higher depth value for the hotbar
+        this.itemYPos = 40+this.slotSize/2;
+        this.graphics.setDepth(10);
     }
+
+    renderItemCounts() {
+        // Iterate over each item in the hotbar
+        for (let itemName in this.items) {
+            const item = this.items[itemName];
+            
+            // Check if a count text object already exists
+            if (!item.countText) {
+                // Create and store the count text object above the item image
+                item.countText = this.scene.add.text(
+                    item.image.x + this.itemSize / 2, // Position it above the image
+                    item.image.y - 10,
+                    item.count.toString(),             // Display the item count
+                    { font: '15px Arial', fill: '#fff', align: 'center' }
+                ).setOrigin(0.5, 1).setDepth(10); // Center align, above the item image
+            }
+            
+            // Update the text object's position to follow the item's image
+            item.countText.setPosition(item.image.x + this.itemSize / 2, item.image.y - 10);
+            // Update the text to reflect the current count
+            item.countText.setText(item.count.toString());
+        }
+    }
+    
+    getXPosition(){
+        let index = Object.keys(this.items).length;
+        let calculatedItemX = this.padding + index * this.xPadding;
+        let offset = this.slotSize / 2;
+        calculatedItemX += offset;
+        return calculatedItemX;
+    }
+
+
+    handleExistingItem(itemName) {
+        this.items[itemName].count += 1;
+        console.log("Item " + itemName + " incremented by 1");
+    }
+
+    addItemToHotbar(itemName){
+        
+        // check if image already exists, if so, find image index and increment count
+
+        if (this.items[itemName]) {
+            this.handleExistingItem(itemName);
+            return;
+        }
+
+        // else, calculate position of the image and index etc. to create new one
+
+        let calculatedItemX = this.getXPosition();
+
+        let itemImage = this.scene.createStaticImage(itemName, calculatedItemX, this.itemYPos);
+        this.items[itemName] = {
+            image: itemImage,
+            count: 1,
+        };
+
+        console.log("Item " + itemName + " added to hotbar");
+    } 
 
     selectSlot(slot) {
         this.selectedSlot = slot;
+
+        // ONLY DO REST IF THERE IS SOMETING IN SLOT??!!
+
+        if (!this.items[Object.keys(this.items)[slot]]) {
+            this.scene.localPlayer.holdNothing();
+            return;
+        }
+
+        // add unequip when selecting the same slot
+
+       // this.scene.localPlayer.playerObject.holding = Object.values()
+        console.log("holding", Object.keys(this.items)[slot]);
+        this.scene.localPlayer.setHoldImage(Object.keys(this.items)[slot]);
+
     }
 
     renderSelectedSlot() {
@@ -595,6 +821,7 @@ class Hotbar {
         for (let i = 0; i < this.maxSlotCount; i++) {
             this.renderSelectedSlot();
             this.renderSquare(i * this.xPadding);
+            this.renderItemCounts();
         }
     }
 }

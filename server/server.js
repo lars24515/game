@@ -84,6 +84,16 @@ class Network{
                                 //console.log("received playerPosition from", data.UUID);
                                 this.updatePlayerPosition(data);
                                 break;
+                            case "holding":
+                                console.log("received playerHolding from", data.UUID);
+
+                                this.broadcast({
+                                    UUID: data.UUID,
+                                    type: "updatePlayer",
+                                    property: "holding",
+                                    value: data.value,
+                                })
+                                break;
                             // other properties as well
                         }
                         break;
