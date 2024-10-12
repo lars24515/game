@@ -56,6 +56,8 @@ class Network{
         console.log('GameServer is running on ws://localhost:8080');
         this.clients = new Map();
         this.playerObjects = {}; // UUID : PLAYEROBJ
+        this.LCG_MODULUS = 2147483647;
+
 
         this.server.on('connection', (ws) => {
             const clientId = uuidv4();
@@ -85,8 +87,9 @@ class Network{
                                 this.updatePlayerPosition(data);
                                 break;
                             case "holding":
-                                console.log("received playerHolding from", data.UUID);
+                               // console.log("received playerHolding from", data.UUID);
 
+                               // forward to players
                                 this.broadcast({
                                     UUID: data.UUID,
                                     type: "updatePlayer",
@@ -127,6 +130,8 @@ class Network{
                         ws.send(JSON.stringify({
                             type: "worldSeed",
                             seed: worldSeed,
+                            natureSeed: Math.floor(Math.random() * this.LCG_MODULUS),
+
                         }));                        
                         //*/
                         console.log("done with client setup");

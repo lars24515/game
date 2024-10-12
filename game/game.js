@@ -53,6 +53,8 @@ sykdommer, % sjanse å få fra å gjøre forskjellige ting, som å drikke ukokt 
 
 */
 
+const LCG_MODULUS = 2147483647;
+
 // Define the Game class first
 class Game extends Phaser.Scene {
     constructor() {
@@ -66,6 +68,8 @@ class Game extends Phaser.Scene {
         this.staticImageDepth = 20; // should be above most other images.. maybe create a map list for this sometime?
         this.chunkSize = 16;
         this.tileSize = 64; // Adjust based on your tile images
+        this.OthersOffsetDistance = 32;
+        this.OthersAngleOffset = -90;
         this.possibleTiles = [
             { type: "Grass", threshold: 0.2, key: "grass" },        // Most common
             { type: "Water", threshold: 0.3, key: "water" },        // Some water bodies       // Few bushes
@@ -76,6 +80,16 @@ class Game extends Phaser.Scene {
         this.seed = null;
         this.world = [];
         this.playerEvents = new Phaser.Events.EventEmitter();
+        this.natureSeed = null;
+      //  this.randomTileGenerator = null;
+    }
+
+    seedRandom(seed) {
+        let value = seed;
+        return function() {
+            value = (value * 16807) % LCG_MODULUS;  // Use the LCG_MODULUS variable here
+            return (value - 1) / (LCG_MODULUS - 1); // Normalize the value to a float between 0 and 1
+        };
     }
 
     preload() {
@@ -172,17 +186,19 @@ class Game extends Phaser.Scene {
         // Initialize Network after game creation
         window.network = new Network(this); // Pass this scene to Network
     }
-
+    /*
     updateOtherClientsHolding(){
         for (let player of Object.values(this.playerList)) {
             let image = player.holdingImage;
             if (!player.holding) return;   
+
             // player is holding something, render it
+            console.log(player.holdingImage);
             if (!player.holdingImage){
                 // player is holding something, but no image is present
 
+                console.log(this.sprite.x);
                 let holdingImage = this.scene.add.image(this.sprite.x, this.sprite.y, image);
-
                 holdingImage.setDepth(50);
                 player.holdingImage = image;
 
@@ -190,6 +206,7 @@ class Game extends Phaser.Scene {
                 console.log("set player image for", player.UUID);
 
             }
+            console.log("here");
             // image is present and player is holding something
             // update the position
 
@@ -199,15 +216,20 @@ class Game extends Phaser.Scene {
             let offsetY = Math.sin(angleInRadians) * this.localPlayer.offsetDistance;
     
             // Set position of the holding image in front of the player
+
+            // x, y is undefined
+
             player.holdingImage.setPosition(player.sprite.x + offsetX, player.sprite.y + offsetY);
             player.holdingImage.setOrigin(0, 0.3);
             
             // Set the holding image's angle to exactly match the player's angle
             player.holdingImage.setAngle(player.angle - 45);
+           // console.log(player.holdingImage);
 
 
         }
     }
+        */
 
     handleTileHover(pointer) {
         // Convert pointer (mouse) position to tile coordinates
@@ -242,7 +264,8 @@ class Game extends Phaser.Scene {
 
         this.hotbar.render();
 
-        this.updateOtherClientsHolding();
+       // this.updateOtherClientsHolding();
+        this.renderOtherHolding();
         this.renderDisplayNames();
     }
 
@@ -339,23 +362,40 @@ class Game extends Phaser.Scene {
 
     }    
 
-    createMap() {
+    createMap(getRandomTile) {
         for (let x = 0; x < this.worldSize; x++) {
             for (let y = 0; y < this.worldSize; y++) {
                 let tileType = this.world[x][y];
                 let tileKey = this.getTileKey(tileType);
                 //console.log("Tile: " + tileKey + " at (" + x + ", " + y + ")");
     
-                this.addTile(x, y, tileKey);
+                
 
-                if (this.getRandom(0.05) && tileKey === "grass") {
-                    // add tree
-                    this.addTile(x, y, "tree");
+                // if random and tile=grass, do it
+                
+                // Determine the type of tile based on random value
+
+                if (!tileKey == "grass"){
+                    this.addTile(x, y, tileKey);
+                    continue; // not grass, so just assign image and skip
                 }
-                if (this.getRandom(0.02) && tileKey === "grass") {
-                    // add tree
-                    this.addTile(x, y, "stone");
+                // its grass, so give chance to spawn f.ex. tree
+                console.log("creating new tile");
+
+                let randValue = getRandomTile();
+                for (let tile of this.possibleTiles) {
+                   // console.log(`if (${randValue} <= ${tile.threshold}) then ${tile.key}`);
+                    if (randValue <= tile.threshold) {
+                        tileType = tile.key;
+                        console.log(`Tile: ${tileType} at (${x}, ${y})`);
+                        break;
+                    }
+                    randValue -= tile.threshold;
                 }
+
+                // Assign tile type 
+                this.addTile(x, y, this.getTileKey(tileType));
+
             }
         }
     }
@@ -405,6 +445,32 @@ class Game extends Phaser.Scene {
         image.setDisplaySize(this.staticImageSize, this.staticImageSize);
         image.setDepth(this.staticImageDepth);
         return image;
+    }
+
+    renderOtherHolding(){
+       // console.log("DEBUG plagerlist=", this.playerList);
+        for (let player of Object.keys(this.playerList)){
+          //  console.log("DEUBUG player=", player);
+            let target = this.playerList[player];
+
+          //  console.log("DEBUG target=", target);
+            if (target.holding == "") continue; // if target holding NULL, skip
+            // else, render at correspnding position
+
+            // math
+            let angleInRadians = Phaser.Math.DegToRad(target.sprite.angle + this.angleOffset);
+            let offsetX = Math.cos(angleInRadians) * this.OthersOffsetDistance;
+            let offsetY = Math.sin(angleInRadians) * this.OthersOffsetDistance;
+    
+            // Set position of the holding image in front of the player
+           // target.holdingImage.setPosition(target.sprite.x + offsetX, target.sprite.y + offsetY);
+            target.holdingImage.setPosition(target.x + offsetX, target.y + offsetY);
+            target.holdingImage.setOrigin(0, 0.3);
+            
+            // Set the holding image's angle to exactly match the player's angle
+            target.holdingImage.setAngle(target.sprite.angle - 45);
+           // console.log("rendered holding image for", target.name, "at", target.holdingImage.x, target.holdingImage.y);
+        }
     }
     
 }
@@ -592,10 +658,16 @@ class Network {
             switch (data.type) {
                 case "worldSeed":
                     const seed = data.seed;
-                    console.log("received seed: " + seed + " from server");
+                    const natureSeed = data.natureSeed;
+                    this.gameScene.natureSeed = natureSeed;
+                   // this.gameScene.randomTileGenerator = this.gameScene.seedRandom(natureSeed);
+
+                    console.log("received worldSeed: " + seed + " from server");
+                    console.log("received natureSeed: " + data.natureSeed + " from server");
+
                     console.log("generating world with seed: " + seed);
                     this.gameScene.generateWorld(seed);
-                    this.gameScene.createMap(); // Create the tilemap from generated world data
+                    this.gameScene.createMap(this.gameScene.seedRandom(natureSeed)); // Create the tilemap from generated world data
                     break;
                 
                 case "playerList":
@@ -666,10 +738,43 @@ class Network {
     updatePlayerHolding(data){
         console.log("received holding data from", data.UUID);
         if (data.value == "Nothing"){
-            return;
+            let target = this.gameScene.playerList[data.UUID];
+            
+            target.holdingImage.destroy();
+            target.holdingImage = null;
+            target.holding = "";
+            target.sprite.setTexture("player");
+            console.log("set to nothing for", data.UUID);
         } else {
-            this.gameScene.playerList[data.UUID].holding = data.holding;
-            console.log("set holding");
+            console.log("data not nothing");
+            let image = data.value;
+            let target = this.gameScene.playerList[data.UUID];
+   
+            let imageX = Number.isNaN(target.sprite.x) ? 0 : target.sprite.x;
+            let imageY = Number.isNaN(target.sprite.y) ? 0 : target.sprite.y;
+ 
+            console.log("imageX =", imageX, "imageY =", imageY);    
+
+            // RETURNS CREATE FUNCTION RATHER THAN IMAGE OBJECT?
+
+            // HOW CAN TARGET.HOLDINGIMAGE.X BE NAN WHEN PRINTING TARGET.HOLDINGIMAGE
+            // WHEN TARGET.HOLDINGIMAGE.X DISPLAYS CORRECTLY?
+            target.holdingImage = this.gameScene.add.image(imageX, imageY, image).setOrigin(0, 0.3);
+            console.log("IMAGE COORDS", target.holdingImage.x, target.holdingImage.y);
+            console.log("DEBUG imag3333e =", target.holdingImage);
+            
+
+            target.holdingImage.setDepth(50);
+            //this.holdingImage.setScale(1);
+            
+            // Update the player object with the current holding image
+            target.holding = image; // image object name string
+            
+            // Optionally update the player's main sprite texture
+            target.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
+            console.log(`set ${target.name} image to holding ${image}`);
+            console.log("DEBUG image =", target.holdingImage);
+
         }
     }
 
@@ -678,6 +783,10 @@ class Network {
         this.gameScene.playerList[data.UUID].sprite.x = data.x;
         this.gameScene.playerList[data.UUID].sprite.y = data.y;
         this.gameScene.playerList[data.UUID].sprite.angle = data.angle;
+
+        this.gameScene.playerList[data.UUID].x = data.x;
+        this.gameScene.playerList[data.UUID].y = data.y;
+
        // console.log("updated player position: ", data.UUID);
     }
 
@@ -702,7 +811,7 @@ class Network {
             x: playerObject.x,
             y: playerObject.y,
             holding: "",
-            holdingImage: "",
+            holdingImage: null,
         };
     
         console.log("Player joined: ", playerObject.name, "with UUID:", UUID);
