@@ -11,6 +11,82 @@ var username = getUrlParameter('username');
 
 /*
 
+-- animals
+
+randomly created on the server at random positions
+created together with a seed that determines their behaviour (?)
+
+maybe process their behaviour (movement) randomly on the server and
+just send the new positions to the clients
+
+if you interact with the animal on the client, send an event to the server
+and index which client is (killed?) and handle it serverside animal array
+
+-------- animals
+
+- food
+
+sheep
+pig
+cow
+elephant
+
+- utility
+horse  (ride?)
+
+- predator
+wolves
+bear
+
+---- building
+
+create new index on server for placed blocks.
+and update all clients according to it.
+
+make some blocks only placable on some types of tiles.
+
+-- more animals
+
+const animalProperties = {
+    "sheep": {
+        "healthPoints": 5,
+        "velocity": 3,
+        "behaviour": "flee", // flee, passive, aggressive
+        "possibleDrops" [
+            "wool",
+            "meat",
+        ]
+    }
+}
+
+function getRandomDrop(animal){
+    const drops = animalProperties[animal].possibleDrops;
+    const randomIndex = Math.floor(Math.random() * drops.length);
+    return drops[randomIndex];
+}
+
+class Animal{
+    constructor(type, x, y){
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.healthPoints = animalProperties[type].healthPoints;
+        this.velocity  = animalProperties[type].velocity;
+        this.behaviour = animalProperties[type].behaviour;
+        this.possibleDrops = animalProperties[type].possibleDrops;
+    }
+
+    drop(){
+        network.send("{
+        type: "drop",
+        items: getRandomDrop(this.type),
+        x: this.x,
+        y: this.y
+        }
+        ")
+    }
+}
+
 -- server
 
 assetPaths = {
@@ -63,24 +139,18 @@ class Game extends Phaser.Scene {
         this.localPlayer = null;
         this.players = null;
         this.playerList = {};
-        this.worldSize = 50;
+        this.worldSize = null;
         this.staticImageSize = 32;
         this.staticImageDepth = 20; // should be above most other images.. maybe create a map list for this sometime?
-        this.chunkSize = 16;
-        this.tileSize = 64; // Adjust based on your tile images
+        this.chunkSize = null;
+        this.tileSize = null; // Adjust based on your tile images
         this.OthersOffsetDistance = 32;
         this.OthersAngleOffset = -90;
-        this.possibleTiles = [
-            { type: "Grass", threshold: 0.2, key: "grass" },        // Most common
-            { type: "Water", threshold: 0.3, key: "water" },        // Some water bodies       // Few bushes
-            { type: "Mountain", threshold: 0.15, key: "mountain" },  // Some mountains
-            { type: "Sand", threshold: 0.35, key: "sand" }     
-        ];
-        
         this.seed = null;
         this.world = [];
         this.playerEvents = new Phaser.Events.EventEmitter();
         this.natureSeed = null;
+        this.UIDepth = 10;
       //  this.randomTileGenerator = null;
     }
 
@@ -107,7 +177,7 @@ class Game extends Phaser.Scene {
         this.load.image("grass5", "../assets/resources/grass/5.png");
         this.load.image("grass6", "../assets/resources/grass/6.png");
 
-
+        /*
         this.load.image("mountain", "../assets/resources/mountain.png");
         this.load.image("tree", "../assets/resources/forest.png");
         this.load.image("water", "../assets/resources/water.png");
@@ -115,7 +185,14 @@ class Game extends Phaser.Scene {
         this.load.image("stone", "../assets/resources/stone.png");
         this.load.image("bush", "../assets/resources/bush.png");
         this.load.image("flower", "../assets/resources/flower.png");
+        */
 
+        // nature
+        this.load.image("grass", "../assets/resources/grass3.png");
+        this.load.image("water", "../assets/resources/new/water.png");
+        this.load.image("sand", "../assets/resources/sand2.png");
+        this.load.image("mountain", "../assets/resources/mountain2.png");
+        this.load.image("tree", "../assets/resources/bush.png");
 
         // item images
         this.load.image("woodenSword", "../assets/items/wooden_sword.png");
@@ -126,17 +203,17 @@ class Game extends Phaser.Scene {
     }
 
     create() {
+
+        this.tiles = this.add.group();
+
         this.localPlayer = new Player(username, "blue", this, this.physics.add.sprite(100, 450, 'player').setOrigin(0.5, 0.5));
         this.localPlayer.sprite.setDepth(5);
         this.localPlayer.sprite.setScale(0.5)
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
 
-        // camera
+        
 
-        this.cameras.main.setBounds(0, 0, this.worldSize * this.tileSize, this.worldSize * this.tileSize); // Set bounds to match world size
-        this.cameras.main.startFollow(this.localPlayer.sprite, true, 0.1, 0.1); // Smooth follow
-
-        this.input.on('pointermove', this.handleTileHover.bind(this));
+       // this.input.on('pointermove', this.handleTileHover.bind(this));
 
         // textures
 
@@ -149,6 +226,8 @@ class Game extends Phaser.Scene {
             "grass5",
             "grass6",
         ];
+
+
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasdKeys = this.input.keyboard.addKeys({
@@ -185,64 +264,6 @@ class Game extends Phaser.Scene {
 
         // Initialize Network after game creation
         window.network = new Network(this); // Pass this scene to Network
-    }
-    /*
-    updateOtherClientsHolding(){
-        for (let player of Object.values(this.playerList)) {
-            let image = player.holdingImage;
-            if (!player.holding) return;   
-
-            // player is holding something, render it
-            console.log(player.holdingImage);
-            if (!player.holdingImage){
-                // player is holding something, but no image is present
-
-                console.log(this.sprite.x);
-                let holdingImage = this.scene.add.image(this.sprite.x, this.sprite.y, image);
-                holdingImage.setDepth(50);
-                player.holdingImage = image;
-
-                player.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
-                console.log("set player image for", player.UUID);
-
-            }
-            console.log("here");
-            // image is present and player is holding something
-            // update the position
-
-            let angleInRadians = Phaser.Math.DegToRad(player.angle);
-    
-            let offsetX = Math.cos(angleInRadians) * this.localPlayer.offsetDistance;
-            let offsetY = Math.sin(angleInRadians) * this.localPlayer.offsetDistance;
-    
-            // Set position of the holding image in front of the player
-
-            // x, y is undefined
-
-            player.holdingImage.setPosition(player.sprite.x + offsetX, player.sprite.y + offsetY);
-            player.holdingImage.setOrigin(0, 0.3);
-            
-            // Set the holding image's angle to exactly match the player's angle
-            player.holdingImage.setAngle(player.angle - 45);
-           // console.log(player.holdingImage);
-
-
-        }
-    }
-        */
-
-    handleTileHover(pointer) {
-        // Convert pointer (mouse) position to tile coordinates
-        const tileX = Math.floor(pointer.worldX / this.tileSize);
-        const tileY = Math.floor(pointer.worldY / this.tileSize);
-    
-        // Ensure we're within the world bounds
-        /*
-        if (tileX >= 0 && tileX < this.worldSize && tileY >= 0 && tileY < this.worldSize) {
-            const tileType = this.world[tileX][tileY];
-            console.log(`Hovering over tile: Type = ${tileType}, Coordinates = (${tileX}, ${tileY})`);
-        }
-            */
     }
     
 
@@ -286,118 +307,14 @@ class Game extends Phaser.Scene {
     }
 
 
-    generateWorld(seed) {
-        var noiseGenerator = new SimplexNoise(seed);
-        console.log("created noise map with seed", seed);
-
-        for (let x = 0; x < this.worldSize; x++) {
-            this.world[x] = [];
-            for (let y = 0; y < this.worldSize; y++) {
-                let noiseValue = noiseGenerator.noise2D(x / this.worldSize, y / this.worldSize);
-                let tileType = this.getTileType(noiseValue);
-                this.world[x][y] = tileType;
-            }
-        }
-        console.log("World successfully generated");
-        return this.world;
-    }
-
     getRandom(chance) {
         return Math.random() < chance; // 'chance' is a value between 0 and 1
     }
     
-    
-
-    getTileType(noiseValue) {
-        let normalizedValue = (noiseValue + 1) / 2;
-        for (let tile of this.possibleTiles) {
-            if (normalizedValue <= tile.threshold) {
-                return tile.type;
-            }
-        }
-    }
 
     getRandomElement(array) {
         const randomIndex = Phaser.Math.Between(0, array.length - 1);
         return array[randomIndex];
-    }
-
-    addTile(x, y, tileKey) {
-        let tileImage;
-        
-        if (tileKey === "grass") {
-            tileImage = this.add.image(x * this.tileSize, y * this.tileSize, this.getRandomElement(this.grassTextures));
-            tileImage.setOrigin(0, 0);
-        } else if (tileKey === "tree") {
-            tileImage = this.add.image(x * this.tileSize, y * this.tileSize, tileKey);
-            tileImage.setOrigin(0.5, 1);
-        } else {
-            tileImage = this.add.image(x * this.tileSize, y * this.tileSize, tileKey);
-            tileImage.setOrigin(0.5, 0.5);
-        }
-        
-        // Resizing every tile to 32x32
-        tileImage.setDisplaySize(this.tileSize, this.tileSize);
-
-        if (tileKey === "sand") {
-            tileImage.setOrigin(0, 0);  
-            tileImage.setDisplaySize(this.tileSize, this.tileSize);
-        }
-        
-
-        if (tileKey === "tree") {
-            tileImage.setDisplaySize(128, 256);
-            tileImage.setDepth(1);
-        }
-        if (tileKey === "stone") {
-            if (this.getRandom(0.5)) {
-                tileImage.setDisplaySize(64, 64);
-            } else {
-                tileImage.setDisplaySize(80, 80);
-            }
-            
-        }
-
-        tileImage.setDepth(1);
-
-    }    
-
-    createMap(getRandomTile) {
-        for (let x = 0; x < this.worldSize; x++) {
-            for (let y = 0; y < this.worldSize; y++) {
-                let tileType = this.world[x][y];
-                let tileKey = this.getTileKey(tileType);
-                //console.log("Tile: " + tileKey + " at (" + x + ", " + y + ")");
-    
-                
-
-                // if random and tile=grass, do it
-                
-                // Determine the type of tile based on random value
-
-                if (!tileKey == "grass"){
-                    this.addTile(x, y, tileKey);
-                    continue; // not grass, so just assign image and skip
-                }
-                // its grass, so give chance to spawn f.ex. tree
-                console.log("creating new tile");
-
-                let randValue = getRandomTile();
-                for (let tile of this.possibleTiles) {
-                   // console.log(`if (${randValue} <= ${tile.threshold}) then ${tile.key}`);
-                    if (randValue <= tile.threshold) {
-                        tileType = tile.key;
-                        console.log(`Tile: ${tileType} at (${x}, ${y})`);
-                        break;
-                    }
-                    randValue -= tile.threshold;
-                }
-
-                // Assign tile type 
-                this.addTile(x, y, this.getTileKey(tileType));
-
-            }
-        }
     }
 
     renderDisplayNames() {
@@ -418,22 +335,6 @@ class Game extends Phaser.Scene {
     
             // Update the text object's position to follow the player's sprite
             player.nameText.setPosition(player.sprite.x, player.sprite.y - 20);
-        }
-    }
-    
-    
-    getTileKey(type) {
-        // Map tile type to the corresponding image key
-        switch (type) {
-            case "Grass": return "grass";
-            case "Mountain": return "mountain";
-            case "Tree": return "tree";
-            case "Water": return "water";
-            case "Stone": return "stone";
-            case "Sand": return "sand";
-            case "Bush": return "bush";
-            case "Flower": return "flower";
-            default: return "grass"; // Default to grass if the type isn't recognized
         }
     }
 
@@ -472,6 +373,68 @@ class Game extends Phaser.Scene {
            // console.log("rendered holding image for", target.name, "at", target.holdingImage.x, target.holdingImage.y);
         }
     }
+
+    drawTiles(){
+        // call from generateWorld or after it has been called from Network class
+        // run this after assigning all tiles in array. this will place the corresponding
+        // tile images.
+    }
+
+    drawTile(x, y, tile) {
+        let sprite = this.add.sprite(x, y, tile);
+        sprite.setOrigin(0.5, 0.5);
+    
+        // Calculate the scale factor based on tile size
+        let scaleX = this.tileSize / sprite.width;
+        let scaleY = this.tileSize / sprite.height;
+    
+        // Set the scale to maintain aspect ratio
+        sprite.setScale(scaleX, scaleY);
+    
+        this.tiles.add(sprite);    
+    }
+    
+
+    getTile(x, y, noiseGenerator, noiseScale) {
+        let v = noiseGenerator.noise2D(x * noiseScale, y * noiseScale);
+        if (v < 0.1) {
+            return "water";
+        } else if (v < 0.2) {
+            return "sand";
+        } else if (v < 0.7) {
+            return "grass";
+        } else {
+            return "mountain";
+        }
+    }
+    
+
+    generateWorld(seed) {
+        console.log("hi");
+        const noiseGenerator = new SimplexNoise(seed);
+        console.log("created noise map", noiseGenerator, "with seed", seed);
+    
+        const natureRandom = this.seedRandom(this.natureSeed);
+    
+        for (let i = 0; i < this.worldSize / this.tileSize; i++) {
+            for (let j = 0; j < this.worldSize / this.tileSize; j++) {
+
+                const tileType = this.getTile(i, j, noiseGenerator, this.noiseScale);
+                if (tileType === "grass") {
+                    this.drawTile(this.tileSize * i, this.tileSize * j, "grass");
+
+                    if (natureRandom() < 0.05) {
+                        this.drawTile(this.tileSize * i, this.tileSize * j, "tree");
+                    }
+                } else { // original
+                    this.drawTile(this.tileSize * i, this.tileSize * j, tileType);
+                }
+            }
+        }
+    }
+    
+    
+    
     
 }
 
@@ -657,30 +620,38 @@ class Network {
             const data = JSON.parse(event.data);
             switch (data.type) {
                 case "worldSeed":
+                    console.log("h222i");
                     const seed = data.seed;
-                    const natureSeed = data.natureSeed;
+                    const natureSeed = data.natureSeed; 
+                    const worldSize = data.worldSize;
+                    const chunkSize = data.chunkSize;
+                    const tileSize = data.tileSize;
+
                     this.gameScene.natureSeed = natureSeed;
-                   // this.gameScene.randomTileGenerator = this.gameScene.seedRandom(natureSeed);
+                    this.gameScene.worldSize = worldSize;
+                    this.gameScene.chunkSize = chunkSize;
+                    this.gameScene.tileSize = tileSize;
+                    this.gameScene.noiseScale = data.noiseScale;
 
                     console.log("received worldSeed: " + seed + " from server");
                     console.log("received natureSeed: " + data.natureSeed + " from server");
+                    console.log("received worldSize: " + data.worldSize + " from server");
+                    console.log("received chunkSize: " + data.chunkSize + " from server");
+                    console.log("received tileSize: " + data.tileSize + " from server");
 
+                    // camera
+
+                    this.gameScene.cameras.main.setBounds(0, 0, this.gameScene.worldSize * this.gameScene.tileSize, this.gameScene.worldSize * this.gameScene.tileSize); // Set bounds to match world size
+                    this.gameScene.cameras.main.startFollow(this.gameScene.localPlayer.sprite, true, 0.1, 0.1); // Smooth follow
+
+                    console.log("created camera follow thing");
                     console.log("generating world with seed: " + seed);
                     this.gameScene.generateWorld(seed);
-                    this.gameScene.createMap(this.gameScene.seedRandom(natureSeed)); // Create the tilemap from generated world data
                     break;
                 
                 case "playerList":
-                    /*
-                    for otherPlayer in data.playerList:
-                        if otherPlayer.UUID not in this.gameScene.playerList:
-                            this.handlePlayerJoined(otherPlayer);
-                     */
-
                     for (let key in data.playerList) {
                         const value = data.playerList[key];
-                       // console.log("key =", key);
-                      //  console.log("value =", data.playerList[key]);
 
                         // if not UUID (key) in playerList, run
                         // handlePlayerJoined on player object
@@ -797,6 +768,7 @@ class Network {
         sprite.setDepth(10);
         return sprite;
     }
+    
 
     handlePlayerJoined(UUID, playerObject) {
 
@@ -823,6 +795,24 @@ class Network {
     }
 }
 
+class playerStats {
+    constructor(scene) {
+        this.scene = scene;
+        this.graphics = this.scene.add.graphics();
+        this.graphics.setDepth(this.scene.UIDepth);
+
+        // values
+        this.maxHealth = 100;
+        this.healthValue = this.maxHealth;
+        this.hungerValue = 100;
+        this.staminaValue = 100;
+    }
+
+    updateHealth(value){
+        this.healthValue += value;
+    }
+}
+
 class Hotbar {
     constructor(scene) {
         this.scene = scene;
@@ -835,28 +825,25 @@ class Hotbar {
         this.itemSize = 25;
         this.maxSlotCount = 9;
         this.itemYPos = 40+this.slotSize/2;
-        this.graphics.setDepth(10);
+        this.graphics.setDepth(this.scene.UIDepth);
+        this.graphics.setScrollFactor(0);
     }
 
     renderItemCounts() {
-        // Iterate over each item in the hotbar
         for (let itemName in this.items) {
             const item = this.items[itemName];
-            
-            // Check if a count text object already exists
+
             if (!item.countText) {
-                // Create and store the count text object above the item image
                 item.countText = this.scene.add.text(
-                    item.image.x + this.itemSize / 2, // Position it above the image
+                    item.image.x + this.itemSize / 2, 
                     item.image.y - 10,
-                    item.count.toString(),             // Display the item count
+                    item.count.toString(),            
                     { font: '15px Arial', fill: '#fff', align: 'center' }
-                ).setOrigin(0.5, 1).setDepth(10); // Center align, above the item image
+                ).setOrigin(0.5, 1).setDepth(this.scene.UIDepth).setScrollFactor(0); 
+                // scrollfactor makes it not follow camera
             }
             
-            // Update the text object's position to follow the item's image
             item.countText.setPosition(item.image.x + this.itemSize / 2, item.image.y - 10);
-            // Update the text to reflect the current count
             item.countText.setText(item.count.toString());
         }
     }
@@ -889,6 +876,7 @@ class Hotbar {
         let calculatedItemX = this.getXPosition();
 
         let itemImage = this.scene.createStaticImage(itemName, calculatedItemX, this.itemYPos);
+        itemImage.setScrollFactor(0);
         this.items[itemName] = {
             image: itemImage,
             count: 1,
@@ -898,6 +886,11 @@ class Hotbar {
     } 
 
     selectSlot(slot) {
+
+        if (slot == this.selectedSlot) {
+            // add unequip when selecting the same slot
+        }
+
         this.selectedSlot = slot;
 
         // ONLY DO REST IF THERE IS SOMETING IN SLOT??!!
@@ -907,7 +900,7 @@ class Hotbar {
             return;
         }
 
-        // add unequip when selecting the same slot
+        
 
        // this.scene.localPlayer.playerObject.holding = Object.values()
         console.log("holding", Object.keys(this.items)[slot]);
