@@ -258,9 +258,16 @@ class Game extends Phaser.Scene {
         this.localPlayer.sprite.setScale(4);
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
 
-        this.localPlayer.sprite.play("idleDown");
+        // Track the movement status of the player
+        this.input.on('pointermove', () => {
+            if (this.localPlayer.sprite.body.velocity.x === 0 && this.localPlayer.sprite.body.velocity.y === 0) {
+                // Only set idle state when the player is not moving
+                this.localPlayer.setIdleState();
+            }
+        });
 
-       // this.input.on('pointermove', this.handleTileHover.bind(this));
+
+        
 
         // textures
 
@@ -282,6 +289,12 @@ class Game extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             down: Phaser.Input.Keyboard.KeyCodes.S,
             right: Phaser.Input.Keyboard.KeyCodes.D
+        });
+
+        this.input.keyboard.on('keyup', (event) => {
+            if (event.key === 'w') {
+                this.localPlayer.setIdleState();
+            }
         });
 
         let KeyCodes = Phaser.Input.Keyboard.KeyCodes; // reference
@@ -428,6 +441,11 @@ class Game extends Phaser.Scene {
         // Calculate the scale factor based on tile size
         let scaleX = this.tileSize / sprite.width;
         let scaleY = this.tileSize / sprite.height;
+
+        if (tile == "tree"){ // make tree tile cover 2 tiles
+            scaleY *= 2;
+            sprite.setOrigin(0.5, 0.75);
+        }
     
         // Set the scale to maintain aspect ratio
         sprite.setScale(scaleX, scaleY);
@@ -500,7 +518,7 @@ class Player {
         this.angleOffset = -90; // for some reason i need this
         this.offsetDistance = 32;
         this.sprite = sprite;
-        this.internalAngle = null;
+        this.internalAngle = 0;
         //this.hand = scene.createStaticImage("playerHand", 0, 0);
         this.holdingImage = null;
 
@@ -623,19 +641,63 @@ class Player {
         network.send(JSON.stringify(data));
     }
 
+    setIdleState(){
+        // switch this.angle, corresponding image up down left whatever
+        if (this.internalAngle >= 45 && this.internalAngle < 135) {
+            // Face left
+            this.sprite.play("idleSide", true);
+            this.sprite.flipX = false; 
+        } else if (this.internalAngle >= 135 && this.internalAngle < 225) {
+            // Face up
+            this.sprite.play("idleDown", true);
+            this.sprite.flipX = false;  
+        } else if (this.internalAngle >= 225 && this.internalAngle < 315) {
+            // Face right
+            this.sprite.play("idleSide", true);
+            this.sprite.flipX = true; 
+        } else {
+            // Face down (default case for angles 0 to 45 and 315 to 360)
+            this.sprite.play("idleUp", true);
+            this.sprite.flipX = false;  
+        }
+    }
+    
+
+    setWalkingState(){
+        // switch this.angle, corresponding image up down left whatever
+        if (this.internalAngle >= 45 && this.internalAngle < 135) {
+            // Face left
+            this.sprite.play("runSide", true);
+            this.sprite.flipX = false; 
+        } else if (this.internalAngle >= 135 && this.internalAngle < 225) {
+            // Face up
+            this.sprite.play("runDown", true);
+            this.sprite.flipX = false;  
+        } else if (this.internalAngle >= 225 && this.internalAngle < 315) {
+            // Face right
+            this.sprite.play("runSide", true);
+            this.sprite.flipX = true; 
+        } else {
+            // Face down (default case for angles 0 to 45 and 315 to 360)
+            this.sprite.play("runUp", true);
+            this.sprite.flipX = false;  
+        }
+    }
+    
+
     move() {
+        // calculate angle
         let angleInRadians = Phaser.Math.DegToRad(this.internalAngle + this.angleOffset);
 
         let deltaX = Math.cos(angleInRadians) * this.velocity;
         let deltaY = Math.sin(angleInRadians) * this.velocity;
 
-       // this.scene.moveWorld(-deltaX, -deltaY);
-        //console.log("moved worl");
-
         this.sprite.setVelocity(deltaX, deltaY);
 
+        // update player sprite image based on angle (up, down, left, etc.)
+        this.setWalkingState();
 
-        this.onPlayerMove();
+        this.onPlayerMove(); // update server
     }
     
 }

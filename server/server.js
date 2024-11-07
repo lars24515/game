@@ -43,7 +43,10 @@ server.start();
 
 /*-----------------------game----------------------*/
 
+const LCG_MODULUS = 2147483647;
+
 const worldSeed = Math.floor(Math.random() * 1000000).toString();
+const natureSeed = Math.floor(Math.random() * LCG_MODULUS)
 
 
 // game start
@@ -62,8 +65,6 @@ class Network{
         console.log('GameServer is running on ws://localhost:8080');
         this.clients = new Map();
         this.playerObjects = {}; // UUID : PLAYEROBJ
-        this.LCG_MODULUS = 2147483647;
-
 
         this.server.on('connection', (ws) => {
             const clientId = uuidv4();
@@ -139,7 +140,7 @@ class Network{
                             tileSize   : tileSize,
                             chunkSize  : chunkSize,
                             worldSize  : worldSize,
-                            natureSeed : Math.floor(Math.random() * this.LCG_MODULUS),
+                            natureSeed : natureSeed,
                             noiseScale : noiseScale,
 
                         }));                        
