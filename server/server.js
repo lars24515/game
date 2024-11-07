@@ -162,11 +162,7 @@ class Network{
     }
 
     updatePlayerPosition(data){
-      //  console.log(this.playerObjects); // debug
-        // const playerIndex = this.playerObjects[data.UUID];
 
-      //  console.log("UUID =", data.UUID);
-      //  console.log("playerList =", this.playerObjects);
 
         const playerIndex = this.playerObjects[data.UUID];
 
@@ -202,8 +198,6 @@ class Network{
             client.send(JSON.stringify(data)); 
         });
     }
-
-    
 }
 
 network = new Network(8080);

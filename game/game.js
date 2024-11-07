@@ -163,7 +163,11 @@ class Game extends Phaser.Scene {
     }
 
     preload() {
-        // Load tile images
+        // player sprite sheet
+        this.load.spritesheet("playerSpriteSheet", "../assets/player/spritesheet.png", {
+            frameWidth: 16,
+            frameHeight: 16,
+        });
 
         // player
         this.load.image("player", "../assets/player/new still.png");
@@ -204,14 +208,57 @@ class Game extends Phaser.Scene {
 
     create() {
 
+        // player spritesheet
+        this.anims.create({
+            key: "idleDown",
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[0, 1, 2]}),
+            frameRate: 7,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "idleSide",
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[8, 9, 10]}),
+            frameRate: 7,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "idleUp",
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[16, 17, 18]}),
+            frameRate: 7,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "runDown",
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[24, 25, 26, 27]}),
+            frameRate: 7,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "runSide",
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[32, 33, 34, 35]}),
+            frameRate: 7,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "runUp",
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[40, 41, 42, 43]}),
+            frameRate: 7,
+            repeat: -1,
+        })
+
         this.tiles = this.add.group();
 
-        this.localPlayer = new Player(username, "blue", this, this.physics.add.sprite(100, 450, 'player').setOrigin(0.5, 0.5));
+        this.localPlayer = new Player(username, "blue", this, this.physics.add.sprite(100, 450, 'playerSpriteSheet').setOrigin(0.5, 0.5));
         this.localPlayer.sprite.setDepth(5);
-        this.localPlayer.sprite.setScale(0.5)
+        this.localPlayer.sprite.setScale(4);
         this.playerEvents.on('move', this.localPlayer.onPlayerMove.bind(this.localPlayer));
 
-        
+        this.localPlayer.sprite.play("idleDown");
 
        // this.input.on('pointermove', this.handleTileHover.bind(this));
 
@@ -374,12 +421,6 @@ class Game extends Phaser.Scene {
         }
     }
 
-    drawTiles(){
-        // call from generateWorld or after it has been called from Network class
-        // run this after assigning all tiles in array. this will place the corresponding
-        // tile images.
-    }
-
     drawTile(x, y, tile) {
         let sprite = this.add.sprite(x, y, tile);
         sprite.setOrigin(0.5, 0.5);
@@ -459,6 +500,7 @@ class Player {
         this.angleOffset = -90; // for some reason i need this
         this.offsetDistance = 32;
         this.sprite = sprite;
+        this.internalAngle = null;
         //this.hand = scene.createStaticImage("playerHand", 0, 0);
         this.holdingImage = null;
 
@@ -504,9 +546,10 @@ class Player {
         // Update the player object with the current holding image
         this.playerObject.holding = image;
         
+        // DO NOT UPDATE PLAYER IMAGE, NEW SPRITE
         // Optionally update the player's main sprite texture
-        this.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
-        console.log("set player image", image);
+        //this.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
+        //console.log("set player image", image);
 
         // update server
 
@@ -526,7 +569,7 @@ class Player {
         this.holdingImage.destroy();
         this.holdingImage = null;
         this.playerObject.holding = "";
-        this.sprite.setTexture("player");
+        //this.sprite.setTexture("player");
 
         let data = {
             UUID: this.UUID,
@@ -550,8 +593,10 @@ class Player {
     }
 
     renderPlayerHand(angle){
-        this.sprite.angle = angle-this.angleOffset;
+       // this.sprite.angle = angle-this.angleOffset;
+        // dont rotate player
 
+        this.internalAngle = angle - this.angleOffset;
     }
 
     update() {
@@ -579,7 +624,7 @@ class Player {
     }
 
     move() {
-        let angleInRadians = Phaser.Math.DegToRad(this.sprite.angle + this.angleOffset);
+        let angleInRadians = Phaser.Math.DegToRad(this.internalAngle + this.angleOffset);
 
         let deltaX = Math.cos(angleInRadians) * this.velocity;
         let deltaY = Math.sin(angleInRadians) * this.velocity;
@@ -933,6 +978,7 @@ const config = {
     type: Phaser.AUTO,
     width: 1920,
     height: 1080,
+    pixelArt: true,
     physics: {
         default: 'arcade',
         arcade: {
