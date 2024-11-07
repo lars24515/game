@@ -53,10 +53,10 @@ const natureSeed = Math.floor(Math.random() * LCG_MODULUS)
 WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 
-const worldSize = 2000;
+const worldSize = 4000;
 const tileSize = 64;
 const chunkSize = 16;
-const noiseScale = 0.035;
+const noiseScale = 0.02;
 
 
 class Network{
@@ -136,12 +136,12 @@ class Network{
                         console.log("sending word seed", worldSeed);
                         ws.send(JSON.stringify({
                             type       : "worldSeed",
-                            seed       : worldSeed,
-                            tileSize   : tileSize,
-                            chunkSize  : chunkSize,
-                            worldSize  : worldSize,
-                            natureSeed : natureSeed,
-                            noiseScale : noiseScale,
+                            seed       :  worldSeed,
+                            tileSize   :  tileSize,
+                            chunkSize  :  chunkSize,
+                            worldSize  :  worldSize,
+                            natureSeed :  natureSeed,
+                            noiseScale :  noiseScale,
 
                         }));                        
                         //*/

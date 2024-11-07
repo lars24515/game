@@ -169,6 +169,11 @@ class Game extends Phaser.Scene {
             frameHeight: 16,
         });
 
+        this.load.spritesheet("greenTreeSpriteSheet", "../assets/resources/tree_spritesheet.png", {
+            frameWidth: 45,
+            frameHeight: 76,
+        });
+
         // player
         this.load.image("player", "../assets/player/new still.png");
         this.load.image("playerHolding", "../assets/player/holding.png");
@@ -207,6 +212,14 @@ class Game extends Phaser.Scene {
     }
 
     create() {
+
+        // tree animation spritesheet
+        this.anims.create({
+            key: "greenTreeIdle",
+            frames: this.anims.generateFrameNumbers("greenTreeSpriteSheet"),
+            frameRate: 7,
+            repeat: -1,
+        })
 
         // player spritesheet
         this.anims.create({
@@ -436,15 +449,18 @@ class Game extends Phaser.Scene {
 
     drawTile(x, y, tile) {
         let sprite = this.add.sprite(x, y, tile);
-        sprite.setOrigin(0.5, 0.5);
+        sprite.setOrigin(0, 0);
     
         // Calculate the scale factor based on tile size
         let scaleX = this.tileSize / sprite.width;
         let scaleY = this.tileSize / sprite.height;
 
         if (tile == "tree"){ // make tree tile cover 2 tiles
-            scaleY *= 2;
+            scaleY = 3;
+            scaleX = 3;
             sprite.setOrigin(0.5, 0.75);
+            sprite.setTexture("greenTreeSpriteSheet");
+            sprite.play("greenTreeIdle", true);
         }
     
         // Set the scale to maintain aspect ratio
@@ -460,7 +476,7 @@ class Game extends Phaser.Scene {
             return "water";
         } else if (v < 0.2) {
             return "sand";
-        } else if (v < 0.7) {
+        } else if (v < 0.8) {
             return "grass";
         } else {
             return "mountain";
