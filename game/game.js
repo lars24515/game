@@ -197,11 +197,12 @@ class Game extends Phaser.Scene {
         */
 
         // nature
-        this.load.image("grass", "../assets/resources/grass3.png");
+        this.load.image("grass", "../assets/resources/grass4.png");
         this.load.image("water", "../assets/resources/new/water.png");
         this.load.image("sand", "../assets/resources/sand2.png");
         this.load.image("mountain", "../assets/resources/mountain2.png");
         this.load.image("tree", "../assets/resources/bush.png");
+        this.load.image("sugarcane", "../assets/resources/sugarcane.png");
 
         // item images
         this.load.image("woodenSword", "../assets/items/wooden_sword.png");
@@ -461,7 +462,13 @@ class Game extends Phaser.Scene {
             sprite.setOrigin(0.5, 0.75);
             sprite.setTexture("greenTreeSpriteSheet");
             sprite.play("greenTreeIdle", true);
+        } else if (tile == "sugarcane"){
+            scaleY = 3;
+            //scaleX = 3;
+            sprite.setOrigin(0, 0.5);
+            sprite.setTexture("sugarcane");
         }
+        
     
         // Set the scale to maintain aspect ratio
         sprite.setScale(scaleX, scaleY);
@@ -472,9 +479,10 @@ class Game extends Phaser.Scene {
 
     getTile(x, y, noiseGenerator, noiseScale) {
         let v = noiseGenerator.noise2D(x * noiseScale, y * noiseScale);
-        if (v < 0.1) {
+        console.log(v);
+        if (v < -0.2) {
             return "water";
-        } else if (v < 0.2) {
+        } else if (v < 0.01) {
             return "sand";
         } else if (v < 0.8) {
             return "grass";
@@ -501,9 +509,18 @@ class Game extends Phaser.Scene {
                     if (natureRandom() < 0.05) {
                         this.drawTile(this.tileSize * i, this.tileSize * j, "tree");
                     }
+                } else if (tileType == "sand"){
+                    this.drawTile(this.tileSize * i, this.tileSize * j, "sand");
+
+                    if (natureRandom() < 0.2) {
+                        this.drawTile(this.tileSize * i, this.tileSize * j, "sugarcane");
+                    }
+
                 } else { // original
                     this.drawTile(this.tileSize * i, this.tileSize * j, tileType);
                 }
+
+                 
             }
         }
     }

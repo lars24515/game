@@ -58,7 +58,6 @@ const tileSize = 64;
 const chunkSize = 16;
 const noiseScale = 0.02;
 
-
 class Network{
     constructor(port){  
         this.server = new WebSocket.Server({ port: port });
