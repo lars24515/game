@@ -330,6 +330,9 @@ class Game extends Phaser.Scene {
         this.hotbar = new Hotbar(this);
         this.hotbar.render();
 
+        this.playerStats = new Stats(this);
+        this.playerStats.render();
+
         this.hotbar.addItemToHotbar("woodenSword");
         this.hotbar.addItemToHotbar("woodenPickaxe");
         this.hotbar.addItemToHotbar("woodenAxe");
@@ -358,6 +361,7 @@ class Game extends Phaser.Scene {
         
 
         this.hotbar.render();
+        this.playerStats.render();
 
        // this.updateOtherClientsHolding();
         this.renderOtherHolding();
@@ -415,7 +419,6 @@ class Game extends Phaser.Scene {
     createStaticImage(imageKey, x, y) {
         let image = this.add.image(x, y, imageKey);
         console.log("Created static image: " + imageKey + " at (" + x + ", " + y + ")");
-        console.log("image=", image);
         image.setOrigin(0.5, 0.5);
         image.setDisplaySize(this.staticImageSize, this.staticImageSize);
         image.setDepth(this.staticImageDepth);
@@ -479,7 +482,6 @@ class Game extends Phaser.Scene {
 
     getTile(x, y, noiseGenerator, noiseScale) {
         let v = noiseGenerator.noise2D(x * noiseScale, y * noiseScale);
-        console.log(v);
         if (v < -0.2) {
             return "water";
         } else if (v < 0.01) {
@@ -551,6 +553,7 @@ class Player {
         this.angleOffset = -90; // for some reason i need this
         this.offsetDistance = 32;
         this.sprite = sprite;
+        this.facing = 90;
         this.internalAngle = 0;
         //this.hand = scene.createStaticImage("playerHand", 0, 0);
         this.holdingImage = null;
@@ -573,13 +576,23 @@ class Player {
     
             let offsetX = Math.cos(angleInRadians) * this.offsetDistance;
             let offsetY = Math.sin(angleInRadians) * this.offsetDistance;
-    
-            // Set position of the holding image in front of the player
-            this.holdingImage.setPosition(this.sprite.x + offsetX, this.sprite.y + offsetY);
-            this.holdingImage.setOrigin(0, 0.3);
             
-            // Set the holding image's angle to exactly match the player's angle
-            this.holdingImage.setAngle(this.sprite.angle - 45);
+            offsetY += 35; // default
+
+            // change offset based on direction
+
+            if (this.facing == "left"){
+                offsetX -= 35;
+                if (!this.holdingImage.flipX){ this.holdingImage.flipX = true; }; 
+            } else { // facing right
+              //  offsetX += 35;    
+                if (this.holdingImage.flipX){ this.holdingImage.flipX = false; };
+            }
+    
+            this.holdingImage.setPosition(this.sprite.x + offsetX, this.sprite.y + offsetY);
+            this.holdingImage.setOrigin(0, 0);
+            
+           
         }
     }
     
@@ -680,6 +693,7 @@ class Player {
             // Face left
             this.sprite.play("idleSide", true);
             this.sprite.flipX = false; 
+            this.facing = "right";
         } else if (this.internalAngle >= 135 && this.internalAngle < 225) {
             // Face up
             this.sprite.play("idleDown", true);
@@ -688,6 +702,7 @@ class Player {
             // Face right
             this.sprite.play("idleSide", true);
             this.sprite.flipX = true; 
+            this.facing = "left";
         } else {
             // Face down (default case for angles 0 to 45 and 315 to 360)
             this.sprite.play("idleUp", true);
@@ -702,6 +717,7 @@ class Player {
             // Face left
             this.sprite.play("runSide", true);
             this.sprite.flipX = false; 
+            this.facing = "right";
         } else if (this.internalAngle >= 135 && this.internalAngle < 225) {
             // Face up
             this.sprite.play("runDown", true);
@@ -710,6 +726,7 @@ class Player {
             // Face right
             this.sprite.play("runSide", true);
             this.sprite.flipX = true; 
+            this.facing = "left";
         } else {
             // Face down (default case for angles 0 to 45 and 315 to 360)
             this.sprite.play("runUp", true);
@@ -935,21 +952,23 @@ class Network {
     }
 }
 
-class playerStats {
+class Stats {
     constructor(scene) {
         this.scene = scene;
         this.graphics = this.scene.add.graphics();
+        this.padding = 50;
         this.graphics.setDepth(this.scene.UIDepth);
-
-        // values
-        this.maxHealth = 100;
-        this.healthValue = this.maxHealth;
-        this.hungerValue = 100;
-        this.staminaValue = 100;
+        this.graphics.setScrollFactor(0);
     }
 
-    updateHealth(value){
-        this.healthValue += value;
+    renderSquare(x) {
+        this.graphics.fillStyle(0xFFFFFF, 1);
+        this.graphics.fillRect(this.padding + x, 40, 200, 600);
+    }
+
+    render() {
+        this.graphics.clear();
+        this.renderSquare(300); 
     }
 }
 
