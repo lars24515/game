@@ -755,7 +755,7 @@ class Player {
 class Network {
     constructor(gameScene) {
         this.gameScene = gameScene; 
-        this.socket = new WebSocket('ws://localhost:8080');
+        this.socket = new WebSocket('ws://localhost:6969');
         this.socket.onopen = function(event) {
             console.log('Connected to WebSocket server');
             const data = JSON.stringify({
@@ -956,19 +956,33 @@ class Stats {
     constructor(scene) {
         this.scene = scene;
         this.graphics = this.scene.add.graphics();
-        this.padding = 50;
+        this.padding = 30;
         this.graphics.setDepth(this.scene.UIDepth);
         this.graphics.setScrollFactor(0);
+        this.bars = {
+            health: {
+                color: "0x00FF00",
+            },
+            hunger: {
+                color: "0x964B00",
+            },
+            stamina: {
+                color: "0xADD8E6",
+            },
+        };        
     }
 
-    renderSquare(x) {
-        this.graphics.fillStyle(0xFFFFFF, 1);
-        this.graphics.fillRect(this.padding + x, 40, 200, 600);
+    renderSquare(y, color) {
+        this.graphics.fillStyle(color, 1);
+        this.graphics.fillRect(600, this.padding + y, 300, 20);
     }
 
     render() {
         this.graphics.clear();
-        this.renderSquare(300); 
+        for (let i = 0; i < 3; i++) {
+            let color = Object.values(this.bars)[i].color;
+            this.renderSquare(i * this.padding, color);
+        }
     }
 }
 

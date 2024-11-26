@@ -8,7 +8,7 @@ async function play() {
         if (playerName.length == 0) {
             throw new Error("Name cannot be empty");
         }
-        const response = await fetch('http://localhost:3000/play', {
+        const response = await fetch('http://localhost:4000/play', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

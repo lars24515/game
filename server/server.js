@@ -38,7 +38,7 @@ class WebServer {
     }
 }
 
-const server = new WebServer(3000);
+const server = new WebServer(4000);
 server.start();
 
 /*-----------------------game----------------------*/
@@ -61,7 +61,7 @@ const noiseScale = 0.02;
 class Network{
     constructor(port){  
         this.server = new WebSocket.Server({ port: port });
-        console.log('GameServer is running on ws://localhost:8080');
+        console.log('GameServer is running on ws://localhost:6969');
         this.clients = new Map();
         this.playerObjects = {}; // UUID : PLAYEROBJ
 
@@ -200,7 +200,7 @@ class Network{
     }
 }
 
-network = new Network(8080);
+network = new Network(6969);
 
 // World generation
 /*
