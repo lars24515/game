@@ -209,6 +209,13 @@ class Game extends Phaser.Scene {
         this.load.image("woodenPickaxe", "../assets/items/wooden_pickaxe.png");
         this.load.image("woodenAxe", "../assets/items/wooden_axe.png");
 
+        // UI elements
+        this.load.image("health", "../assets/ui/health_icon.png");
+        this.load.image("hunger", "../assets/ui/hunger_icon.png");
+        this.load.image("thirst", "../assets/ui/thirst_icon.png");
+        this.load.image("stamina", "../assets/ui/stamina_icon.png");
+        
+
         console.log("Preloaded assets");
     }
 
@@ -264,6 +271,8 @@ class Game extends Phaser.Scene {
             frameRate: 7,
             repeat: -1,
         })
+
+        this.treesGroup = this.add.group();
 
         this.tiles = this.add.group();
 
@@ -465,6 +474,24 @@ class Game extends Phaser.Scene {
             sprite.setOrigin(0.5, 0.75);
             sprite.setTexture("greenTreeSpriteSheet");
             sprite.play("greenTreeIdle", true);
+
+            // interactivity
+
+            console.log("starting interactivity");
+            sprite.setInteractive();
+            sprite.on('pointerdown', () => {
+                 /* handle pointerdown */ 
+                 console.log("mining");
+            });
+            sprite.on('pointerleave', () => {  // AND POINTER UP
+                /* handle pointerleave */
+                console.log("leaving");
+            });
+            this.treesGroup.add(sprite);
+            sprite.setData('health', 5);
+
+
+
         } else if (tile == "sugarcane"){
             scaleY = 3;
             //scaleX = 3;
@@ -557,6 +584,8 @@ class Player {
         this.internalAngle = 0;
         //this.hand = scene.createStaticImage("playerHand", 0, 0);
         this.holdingImage = null;
+
+        // states (like attacking, etc.)
 
         // Server object
         this.playerObject = {
@@ -952,6 +981,8 @@ class Network {
     }
 }
 
+// detect
+
 class Stats {
     constructor(scene) {
         this.scene = scene;
@@ -959,6 +990,12 @@ class Stats {
         this.padding = 30;
         this.graphics.setDepth(this.scene.UIDepth);
         this.graphics.setScrollFactor(0);
+
+        // bar
+        this.barWidth = 300;
+        this.iconOffset = 30;
+        this.barX = 900;
+
         this.bars = {
             health: {
                 color: "0x00FF00",
@@ -970,11 +1007,41 @@ class Stats {
                 color: "0xADD8E6",
             },
         };        
+
+        this.healthIcon = null;
+        this.hungerIcon = null;
+        this.staminaIcon = null;
+    }
+
+    valueToWidth(){
+
     }
 
     renderSquare(y, color) {
+        let Y = 525 + this.padding + y;
+
+        // black outline
+        this.graphics.lineStyle(4, 0x000000, 1);
+        this.graphics.strokeRect(this.barX, Y, this.barWidth, 20);
+
         this.graphics.fillStyle(color, 1);
-        this.graphics.fillRect(600, this.padding + y, 300, 20);
+        this.graphics.fillRect(this.barX, Y, this.barWidth, 20);
+
+
+        if (this.healthIcon == null && color == "0x00FF00"){
+            this.healthIcon = this.scene.createStaticImage("health", this.barX+this.barWidth+this.iconOffset, Y);
+            this.healthIcon.setScrollFactor(0);
+        }
+
+        if (this.hungerIcon == null && color == "0x964B00"){
+            this.hungerIcon = this.scene.createStaticImage("hunger", this.barX+this.barWidth+this.iconOffset, Y);
+            this.hungerIcon.setScrollFactor(0);
+        }
+
+        if (this.staminaIcon == null && color == "0xADD8E6"){
+            this.staminaIcon = this.scene.createStaticImage("stamina", this.barX+this.barWidth+this.iconOffset, Y);
+            this.staminaIcon.setScrollFactor(0);
+        }
     }
 
     render() {
@@ -991,11 +1058,15 @@ class Hotbar {
         this.scene = scene;
         this.graphics = this.scene.add.graphics();
         this.padding = 50;
-        this.xPadding = 40;
         this.items = {};
         this.selectedSlot = 0;
-        this.slotSize = 32;
-        this.itemSize = 25;
+
+        // slot
+        this.slotSize = 50; // edit to dynamically adjust the rest
+        this.xPadding = (125 / 100) * this.slotSize;
+        this.itemSize = (80 / 100) * this.slotSize;
+        this.slotTransparency = 0.5;
+
         this.maxSlotCount = 9;
         this.itemYPos = 40+this.slotSize/2;
         this.graphics.setDepth(this.scene.UIDepth);
@@ -1082,14 +1153,25 @@ class Hotbar {
     }
 
     renderSelectedSlot() {
-        this.graphics.fillStyle(0xFFFFFF, 0.1);
-        this.graphics.fillRect(this.selectedSlot * this.xPadding + this.padding - 5, 35, this.slotSize + 10, this.slotSize + 10);
+        this.graphics.lineStyle(3, 0xFFFFFF, 1); // Set line width, color, and alpha for the outline
+        this.graphics.strokeRect(
+            this.selectedSlot * this.xPadding + this.padding, // X-coordinate matches the square
+            40,                                               // Y-coordinate matches the square
+            this.slotSize,                                    // Width matches the square
+            this.slotSize                                     // Height matches the square
+        );
     }
-
+    
     renderSquare(x) {
-        this.graphics.fillStyle(0x000000, 0.1);
-        this.graphics.fillRect(this.padding + x, 40, this.slotSize, this.slotSize);
+        this.graphics.fillStyle(0x000000, this.slotTransparency);
+        this.graphics.fillRect(
+            this.padding + x,  // X-coordinate
+            40,                // Y-coordinate
+            this.slotSize,     // Width
+            this.slotSize      // Height
+        );
     }
+    
 
     render() {
         this.graphics.clear();
