@@ -196,6 +196,9 @@ class Game extends Phaser.Scene {
             frameHeight: 76,
         });
 
+        this.load.image("destroyedTree", "../assets/Resources/destroyed_tree.png");
+        this.load.image("tree_top", "../assets/Resources/tree_top.png");
+
         this.load.spritesheet("zombieSpriteSheet", "../assets/Zombie.png", {
             frameWidth: 32,
             frameHeight: 32,
@@ -230,6 +233,9 @@ class Game extends Phaser.Scene {
         this.load.image("mountain", "../assets/resources/mountain2.png");
         this.load.image("tree", "../assets/resources/bush.png");
         this.load.image("sugarcane", "../assets/resources/sugarcane.png");
+
+        // seeds
+        this.load.image("treeSeed", "../assets/Resources/tree_seed.png");
 
         // item images
 
@@ -280,20 +286,7 @@ class Game extends Phaser.Scene {
             key: "idleUp",
             frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[16, 17, 18]}),
             frameRate: 7,
-            repeat: -1,swingTool() {
-        // Animate the tool swinging back and forth (using tweens)
-        this.tweens.add({
-            targets: this.tool,
-            angle: 45,  // Rotate to 45 degrees
-            duration: 200,  // Time for one swing
-            yoyo: true,  // Make the tween go back after reaching 45 degrees
-            repeat: 0,  // Do this once (or you could loop if needed)
-            onComplete: () => {
-                // Optionally, handle what happens when the animation completes (e.g., hitting a tree)
-                console.log('Tool hit the tree!');
-            }
-        });
-    }
+            repeat: -1,
         })
 
         this.anims.create({
@@ -427,12 +420,13 @@ class Game extends Phaser.Scene {
         this.resourceDrops = { // key: resource, value: count
             "tree": {
                 "wood": 4,
+                "tree_seed": 1,
             },
             "mountain": {
                 "stone": 4,
                 "metal": 2,
                 "flint": 1,
-            },
+            }, 
         }
 
         // Initialize Network after game creation
@@ -443,7 +437,8 @@ class Game extends Phaser.Scene {
         let drop = Object.keys(this.resourceDrops[resourceType]);
         let amount = this.resourceDrops[resourceType][drop];
         console.log("dropping " + amount + " " + drop);
-        this.hotbar.addItemToHotbar(drop);
+        //this.hotbar.addItemToHotbar(drop); FUNCTION TO DROP ITEM ON FLOOR TO BE PICKED UP, THEN IF 
+        // PLAYER IS CLOSE, IT WILL TWEEN SNAP ONTO HIM AND GO INTO INVENTORY WITH NOTIFICATION BANNER
     }
     
     swingTool(toolImage) {
@@ -454,7 +449,7 @@ class Game extends Phaser.Scene {
             yoyo: true, 
             repeat: 0,  
             onComplete: () => {
-                console.log('Tool hit once');
+                console.log('animation completed');
             }
         });
     }
@@ -578,9 +573,63 @@ class Game extends Phaser.Scene {
         console.log(`hit ${resourceType}, health: ${sprite.getData('health')}`);
         
         // check if tree is destroyed
-        if (sprite.getData('health') <= 0){
+        if (sprite.getData('health') <= 0) {
             this.dropResource(resourceType);
+
+            if (resourceType == "tree") {
+                sprite.anims.stop();
+
+                // CREATE DUPLICATE FOR ANIMATION ONTOP OF TREETRUNK
+                let duplicatedSprite = this.add.sprite(sprite.x, sprite.y, "tree_top");
+                duplicatedSprite.setOrigin(0, 0);
+            
+                let scaleX = this.tileSize / duplicatedSprite.width;
+                let scaleY = this.tileSize / duplicatedSprite.height;
+    
+                scaleY = 3;
+                scaleX = 3;
+                duplicatedSprite.setScale(scaleX, scaleY);
+                duplicatedSprite.setOrigin(0.5, 0.75);
+                console.log("duplicated sprite:", duplicatedSprite);
+
+                // Change texture to show a tree trunk
+                sprite.setTexture("destroyedTree");
+                sprite.setData("health", 1);
+
+                // Make the tree fall sideways FOR DUPLICATE THNE DELETE DUPLICATE AND ORIGINAL REMAIN WITH TRUNK
+                //NO ROTATION
+
+                // Determine fall direction
+                let left = this.getRandom(0.5); // Randomly decide fall direction
+                let angle = left ? 90 : -90;   // Fall left or right
+                let offsetX = left ? 30 : -30; // Move to the side (negative for left, positive for right)
+
+                this.tweens.add({
+                    targets: duplicatedSprite,
+                    angle: angle,        // Rotate the sprite
+                    x: duplicatedSprite.x + offsetX, // Move sideways
+                    duration: 2000,      // Animation duration
+                    ease: "Power2",
+                    onComplete: () => {
+                        console.log('Tree fell.');
+                        duplicatedSprite.destroy();
+
+                        // Add interaction for the fallen tree trunk
+                        sprite.on('pointerdown', () => {
+                            this.dropResource("wood"); // Drop 1 wood
+                            sprite.destroy(); // Remove the sprite
+                            console.log("Fully destroyed tree trunk.");
+                        });
+                    }
+                });
+
+
+                return;
+            }
+            sprite.destroy();
+            // destroy the sprite since no need for tree animation
         }
+
     }
 
     drawTile(x, y, tile) {
