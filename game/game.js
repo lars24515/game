@@ -425,7 +425,7 @@ class Game extends Phaser.Scene {
             "mountain": {
                 "stone": 4,
                 "metal": 2,
-                "flint": 1,
+                "flint": 1, 
             }, 
         }
 
