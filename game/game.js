@@ -127,6 +127,28 @@ ideer
 
 sykdommer, % sjanse å få fra å gjøre forskjellige ting, som å drikke ukokt vann.
 
+
+man kan "bygge" en mine, som er et bilde som er en illusjon av at det går innover i jorda
+hvis man går på den så kommer de ten popup hvor man kan trykke for å TP til et sted.
+koordinatene i oververdenen blir brukt som seed for å generere random caves.
+
+hvis man plasserer en seng, så starter det å spawne zombier rundt basen din på natta.
+man kan bygge rundt basen, og plassere towers for å beskytte mot zombier. det kommer ikke fler zombies
+i waves, men heller random "bloodnight", hvor det kommer fler enn normalt.
+
+det kan være zombier randomly rundt i verden når man utforsker, men de er alene. bare å drepe dem for loot.
+
+for å gjøre dette:
+
+gjøre trær og stein interactive
+lage item drop system
+plukke opp items FUNKER
+crafting menu
+animals
+
+
+
+
 */
 
 const LCG_MODULUS = 2147483647;
@@ -174,6 +196,11 @@ class Game extends Phaser.Scene {
             frameHeight: 76,
         });
 
+        this.load.spritesheet("zombieSpriteSheet", "../assets/Zombie.png", {
+            frameWidth: 32,
+            frameHeight: 32,
+        });
+
         // player
         this.load.image("player", "../assets/player/new still.png");
         this.load.image("playerHolding", "../assets/player/holding.png");
@@ -205,9 +232,14 @@ class Game extends Phaser.Scene {
         this.load.image("sugarcane", "../assets/resources/sugarcane.png");
 
         // item images
+
+        // tools
         this.load.image("woodenSword", "../assets/items/wooden_sword.png");
         this.load.image("woodenPickaxe", "../assets/items/wooden_pickaxe.png");
         this.load.image("woodenAxe", "../assets/items/wooden_axe.png");
+
+        // resources
+        this.load.image("wood", "../assets/Items/wood.png")
 
         // UI elements
         this.load.image("health", "../assets/ui/health_icon.png");
@@ -248,7 +280,20 @@ class Game extends Phaser.Scene {
             key: "idleUp",
             frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[16, 17, 18]}),
             frameRate: 7,
-            repeat: -1,
+            repeat: -1,swingTool() {
+        // Animate the tool swinging back and forth (using tweens)
+        this.tweens.add({
+            targets: this.tool,
+            angle: 45,  // Rotate to 45 degrees
+            duration: 200,  // Time for one swing
+            yoyo: true,  // Make the tween go back after reaching 45 degrees
+            repeat: 0,  // Do this once (or you could loop if needed)
+            onComplete: () => {
+                // Optionally, handle what happens when the animation completes (e.g., hitting a tree)
+                console.log('Tool hit the tree!');
+            }
+        });
+    }
         })
 
         this.anims.create({
@@ -269,6 +314,36 @@ class Game extends Phaser.Scene {
             key: "runUp",
             frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[40, 41, 42, 43]}),
             frameRate: 7,
+            repeat: -1,
+        })
+
+        // zombie animations
+
+        this.anims.create({
+            key: "zombieIdle",
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[0, 1, 2, 3, 4, 5, 6, 7]}),
+            frameRate: 10,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "zombieAttack",
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[13, 14, 15, 16, 17, 18, 19]}),
+            framerate: 10,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "zombieWalk",
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[26, 27, 28, 29, 30, 31, 32, 33]}),
+            framerate: 10,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: "zombieDeath",
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[65, 66, 67, 68, 69, 70, 71, 72]}),
+            framerate: 10,
             repeat: -1,
         })
 
@@ -348,10 +423,41 @@ class Game extends Phaser.Scene {
 
         console.log("Created game assets");
 
+        // dynamic resource drops
+        this.resourceDrops = { // key: resource, value: count
+            "tree": {
+                "wood": 4,
+            },
+            "mountain": {
+                "stone": 4,
+                "metal": 2,
+                "flint": 1,
+            },
+        }
+
         // Initialize Network after game creation
         window.network = new Network(this); // Pass this scene to Network
     }
+
+    dropResource(resourceType) {
+        let drop = Object.keys(this.resourceDrops[resourceType]);
+        let amount = this.resourceDrops[resourceType][drop];
+        console.log("dropping " + amount + " " + drop);
+        this.hotbar.addItemToHotbar(drop);
+    }
     
+    swingTool(toolImage) {
+        this.tweens.add({
+            targets: toolImage,
+            angle: 45,
+            duration: 200, 
+            yoyo: true, 
+            repeat: 0,  
+            onComplete: () => {
+                console.log('Tool hit once');
+            }
+        });
+    }
 
     handleMovement(){
         if (this.cursors.up.isDown || this.wasdKeys.up.isDown) {
@@ -460,6 +566,23 @@ class Game extends Phaser.Scene {
         }
     }
 
+    handleResourceHit(resourceType, sprite){
+         // if not holding tool to destroy tree, do nothing
+        if (!this.localPlayer.holdingImage) return;
+
+        this.swingTool(this.localPlayer.holdingImage);
+
+        let currentHealth = sprite.getData('health');
+        sprite.setData('health', currentHealth - 1);
+
+        console.log(`hit ${resourceType}, health: ${sprite.getData('health')}`);
+        
+        // check if tree is destroyed
+        if (sprite.getData('health') <= 0){
+            this.dropResource(resourceType);
+        }
+    }
+
     drawTile(x, y, tile) {
         let sprite = this.add.sprite(x, y, tile);
         sprite.setOrigin(0, 0);
@@ -479,17 +602,18 @@ class Game extends Phaser.Scene {
 
             console.log("starting interactivity");
             sprite.setInteractive();
+
             sprite.on('pointerdown', () => {
-                 /* handle pointerdown */ 
-                 console.log("mining");
+                /* handle pointerdown */ 
+                this.handleResourceHit(tile, sprite);
             });
-            sprite.on('pointerleave', () => {  // AND POINTER UP
+            sprite.on('pointerout', () => {  // AND POINTER UP
                 /* handle pointerleave */
                 console.log("leaving");
             });
             this.treesGroup.add(sprite);
-            sprite.setData('health', 5);
 
+            sprite.setData('health', 5);
 
 
         } else if (tile == "sugarcane"){
@@ -1018,7 +1142,7 @@ class Stats {
     }
 
     renderSquare(y, color) {
-        let Y = 525 + this.padding + y;
+        let Y = 5 + this.padding + y;
 
         // black outline
         this.graphics.lineStyle(4, 0x000000, 1);
