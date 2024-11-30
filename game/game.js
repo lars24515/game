@@ -246,12 +246,14 @@ class Game extends Phaser.Scene {
 
         // resources
         this.load.image("wood", "../assets/Items/wood.png")
+        this.load.image("sapling", "../assets/Resources/tree_seed.png");
 
         // UI elements
         this.load.image("health", "../assets/ui/health_icon.png");
         this.load.image("hunger", "../assets/ui/hunger_icon.png");
         this.load.image("thirst", "../assets/ui/thirst_icon.png");
         this.load.image("stamina", "../assets/ui/stamina_icon.png");
+        this.load.image("crafting", "../assets/ui/crafting.png");
         
 
         console.log("Preloaded assets");
@@ -410,6 +412,8 @@ class Game extends Phaser.Scene {
         this.playerStats = new Stats(this);
         this.playerStats.render();
 
+        this.craftingMenu = new craftingMenu(this);
+
         this.hotbar.addItemToHotbar("woodenSword");
         this.hotbar.addItemToHotbar("woodenPickaxe");
         this.hotbar.addItemToHotbar("woodenAxe");
@@ -420,26 +424,98 @@ class Game extends Phaser.Scene {
         this.resourceDrops = { // key: resource, value: count
             "tree": {
                 "wood": 4,
-                "tree_seed": 1,
+                "sapling": 1,
             },
             "mountain": {
                 "stone": 4,
-                "metal": 2,
-                "flint": 1, 
+                "metal_ore": 1,
             }, 
+            "trunk": {
+                "wood": 1,
+            }
         }
 
         // Initialize Network after game creation
         window.network = new Network(this); // Pass this scene to Network
     }
 
-    dropResource(resourceType) {
-        let drop = Object.keys(this.resourceDrops[resourceType]);
-        let amount = this.resourceDrops[resourceType][drop];
-        console.log("dropping " + amount + " " + drop);
-        //this.hotbar.addItemToHotbar(drop); FUNCTION TO DROP ITEM ON FLOOR TO BE PICKED UP, THEN IF 
-        // PLAYER IS CLOSE, IT WILL TWEEN SNAP ONTO HIM AND GO INTO INVENTORY WITH NOTIFICATION BANNER
+    pickUpItem(item){
+        // banner animation
+        // sound effect
+        // add item to hotbar
+
+        this.hotbar.addItemToHotbar(item.texture.key);
+        item.destroy();
     }
+
+    moveItem(item) {
+        let randomAngle = Phaser.Math.Between(0, 360); 
+        let randomDistance = Phaser.Math.Between(50, 100); 
+    
+        let offsetX = Math.cos(Phaser.Math.DegToRad(randomAngle)) * randomDistance;
+        let offsetY = Math.sin(Phaser.Math.DegToRad(randomAngle)) * randomDistance;
+    
+        // First movement tween
+        this.tweens.add({
+            targets: item,
+            x: item.x + offsetX,
+            y: item.y + offsetY,
+            duration: 1000, 
+            ease: "Power2",
+            onComplete: () => {
+                console.log("First movement complete");
+    
+                // Second movement tween (move to player)
+                this.tweens.add({
+                    targets: item,
+                    x: this.localPlayer.sprite.x,
+                    y: this.localPlayer.sprite.y,
+                    duration: 1000, 
+                    ease: "Expo.easeIn", 
+                    onComplete: () => {
+                        console.log("Item returned to player");
+                        this.pickUpItem(item);
+                    }
+                });
+            }
+        });
+    }
+    
+
+    dropItem(item, amount, parentSprite) {
+
+        if (!this.textures.exists(item)) {
+            console.error(`Texture '${item}' does not exist.`);
+            return;
+        }
+
+        for (let i = 0; i < amount; i++) {
+            let droppedItem = this.add.sprite(parentSprite.x, parentSprite.y, item);
+
+            // add interactivity for picking up when close
+
+            droppedItem.setOrigin(0, 0);
+            console.log(`Dropped item: ${item}`);
+            this.moveItem(droppedItem);
+        }
+    }
+    
+
+    dropResource(resourceType, sprite) {
+        if (!this.resourceDrops[resourceType]) {
+            console.error(`Resource type '${resourceType}' does not exist in resourceDrops`);
+            return;
+        }
+    
+        let drops = Object.keys(this.resourceDrops[resourceType]);
+    
+        drops.forEach(drop => {
+            let amount = this.resourceDrops[resourceType][drop]; 
+            this.dropItem(drop, amount, sprite); 
+            console.log(`Dropping ${amount} of ${drop}`);
+        });
+    }
+    
     
     swingTool(toolImage) {
         this.tweens.add({
@@ -572,9 +648,9 @@ class Game extends Phaser.Scene {
 
         console.log(`hit ${resourceType}, health: ${sprite.getData('health')}`);
         
-        // check if tree is destroyed
+        // check if object is destroyed
         if (sprite.getData('health') <= 0) {
-            this.dropResource(resourceType);
+            this.dropResource(resourceType, sprite);
 
             if (resourceType == "tree") {
                 sprite.anims.stop();
@@ -616,7 +692,7 @@ class Game extends Phaser.Scene {
 
                         // Add interaction for the fallen tree trunk
                         sprite.on('pointerdown', () => {
-                            this.dropResource("wood"); // Drop 1 wood
+                            this.dropResource("trunk", sprite); // Drop 1 wood
                             sprite.destroy(); // Remove the sprite
                             console.log("Fully destroyed tree trunk.");
                         });
@@ -731,17 +807,6 @@ class Game extends Phaser.Scene {
     
     
 }
-
-class Item {
-    constructor(gameScene, itemType, x, y){
-        this.image = gameScene.createStaticImage(itemType, x, y);
-    }
-
-    destroy(){
-        this.image.destroy();
-    }
-}
-
 
 class Player {
     constructor(name, color, scene, sprite) {
@@ -1154,7 +1219,22 @@ class Network {
     }
 }
 
-// detect
+class craftingMenu {
+    constructor(scene) {
+        this.scene = scene;
+        this.graphics = this.scene.add.graphics();
+        this.graphics.setDepth(this.scene.UIDepth);
+        this.graphics.setScrollFactor(0);
+        this.button = this.scene.add.image(1230, 150, "crafting").setDisplaySize(75, 75);
+        this.button.setDepth(this.scene.UIDepth);
+        this.button.setInteractive();
+        this.button.setScrollFactor(0);
+        this.button.on("pointerdown", () => {
+            console.log("opening crafting menu");
+        });
+    }
+}
+
 
 class Stats {
     constructor(scene) {
