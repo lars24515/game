@@ -173,6 +173,7 @@ class Game extends Phaser.Scene {
         this.playerEvents = new Phaser.Events.EventEmitter();
         this.natureSeed = null;
         this.UIDepth = 10;
+        this.activeMessages = [];
       //  this.randomTileGenerator = null;
     }
 
@@ -216,16 +217,6 @@ class Game extends Phaser.Scene {
         this.load.image("grass5", "../assets/resources/grass/5.png");
         this.load.image("grass6", "../assets/resources/grass/6.png");
 
-        /*
-        this.load.image("mountain", "../assets/resources/mountain.png");
-        this.load.image("tree", "../assets/resources/forest.png");
-        this.load.image("water", "../assets/resources/water.png");
-        this.load.image("sand", "../assets/resources/sand.png");
-        this.load.image("stone", "../assets/resources/stone.png");
-        this.load.image("bush", "../assets/resources/bush.png");
-        this.load.image("flower", "../assets/resources/flower.png");
-        */
-
         // nature
         this.load.image("grass", "../assets/resources/grass4.png");
         this.load.image("water", "../assets/resources/new/water.png");
@@ -233,16 +224,45 @@ class Game extends Phaser.Scene {
         this.load.image("mountain", "../assets/resources/mountain2.png");
         this.load.image("tree", "../assets/resources/bush.png");
         this.load.image("sugarcane", "../assets/resources/sugarcane.png");
+        this.load.image("dark_mountain", "../assets/resources/dark_mountain.png");
 
         // seeds
         this.load.image("treeSeed", "../assets/Resources/tree_seed.png");
 
         // item images
 
+        // building
+        this.load.image("woodDoor", "../assets/building/wood_door.png");
+        this.load.image("woodPlanks", "../assets/building/wood_floor.png");
+        this.load.image("woodWall", "../assets/building/wood_wall.png");
+        
+        // food
+        this.load.image("apple", "../assets/Items/tile224.png");
+        this.load.image("banana", "../assets/Items/tile225.png");
+        this.load.image("pear", "../assets/Items/tile226.png");
+        this.load.image("strawberry", "../assets/Items/tile228.png");
+        this.load.image("carrot", "../assets/Items/tile230.png");
+        this.load.image("mushroom", "../assets/Items/tile236.png");
+        this.load.image("bread", "../assets/Items/tile237.png");
+        this.load.image("chicken", "../assets/Items/tile239.png");
+        this.load.image("steak", "../assets/Items/tile241.png");
+        this.load.image("egg", "../assets/Items/tile246.png");
+
         // tools
+
+        // wood
         this.load.image("woodenSword", "../assets/items/wooden_sword.png");
         this.load.image("woodenPickaxe", "../assets/items/wooden_pickaxe.png");
         this.load.image("woodenAxe", "../assets/items/wooden_axe.png");
+        this.load.image("woodenMace", "../assets/items/tile093.png");
+        
+        // metal
+        this.load.image("ironSword", "../assets/items/iron_sword.png");
+        this.load.image("ironPickaxe", "../assets/items/iron_pickaxe.png");
+        this.load.image("ironAxe", "../assets/items/iron_axe.png");
+
+        // diamond
+        this.load.image("diamondSword", "../assets/items/tile082.png");
 
         // resources
         this.load.image("wood", "../assets/Items/wood.png")
@@ -254,6 +274,7 @@ class Game extends Phaser.Scene {
         this.load.image("thirst", "../assets/ui/thirst_icon.png");
         this.load.image("stamina", "../assets/ui/stamina_icon.png");
         this.load.image("crafting", "../assets/ui/crafting.png");
+        this.load.image("craftingSlot", "../assets/ui/crafting_slot.png");
         
 
         console.log("Preloaded assets");
@@ -637,76 +658,73 @@ class Game extends Phaser.Scene {
         }
     }
 
-    handleResourceHit(resourceType, sprite){
-         // if not holding tool to destroy tree, do nothing
+    handleResourceHit(resourceType, sprite) {
+        // if not holding tool to destroy tree, do nothing
         if (!this.localPlayer.holdingImage) return;
-
+    
         this.swingTool(this.localPlayer.holdingImage);
-
+    
         let currentHealth = sprite.getData('health');
         sprite.setData('health', currentHealth - 1);
-
+    
         console.log(`hit ${resourceType}, health: ${sprite.getData('health')}`);
         
         // check if object is destroyed
         if (sprite.getData('health') <= 0) {
             this.dropResource(resourceType, sprite);
-
-            if (resourceType == "tree") {
-                sprite.anims.stop();
-
-                // CREATE DUPLICATE FOR ANIMATION ONTOP OF TREETRUNK
-                let duplicatedSprite = this.add.sprite(sprite.x, sprite.y, "tree_top");
-                duplicatedSprite.setOrigin(0, 0);
-            
-                let scaleX = this.tileSize / duplicatedSprite.width;
-                let scaleY = this.tileSize / duplicatedSprite.height;
     
-                scaleY = 3;
-                scaleX = 3;
-                duplicatedSprite.setScale(scaleX, scaleY);
-                duplicatedSprite.setOrigin(0.5, 0.75);
-                console.log("duplicated sprite:", duplicatedSprite);
-
-                // Change texture to show a tree trunk
-                sprite.setTexture("destroyedTree");
-                sprite.setData("health", 1);
-
-                // Make the tree fall sideways FOR DUPLICATE THNE DELETE DUPLICATE AND ORIGINAL REMAIN WITH TRUNK
-                //NO ROTATION
-
-                // Determine fall direction
-                let left = this.getRandom(0.5); // Randomly decide fall direction
-                let angle = left ? 90 : -90;   // Fall left or right
-                let offsetX = left ? 30 : -30; // Move to the side (negative for left, positive for right)
-
-                this.tweens.add({
-                    targets: duplicatedSprite,
-                    angle: angle,        // Rotate the sprite
-                    x: duplicatedSprite.x + offsetX, // Move sideways
-                    duration: 2000,      // Animation duration
-                    ease: "Power2",
-                    onComplete: () => {
-                        console.log('Tree fell.');
-                        duplicatedSprite.destroy();
-
-                        // Add interaction for the fallen tree trunk
-                        sprite.on('pointerdown', () => {
-                            this.dropResource("trunk", sprite); // Drop 1 wood
-                            sprite.destroy(); // Remove the sprite
-                            console.log("Fully destroyed tree trunk.");
-                        });
-                    }
-                });
-
-
+            if (resourceType === "tree") {
+                this.handleTreeDestruction(sprite);
                 return;
             }
+    
             sprite.destroy();
-            // destroy the sprite since no need for tree animation
         }
-
     }
+    
+    handleTreeDestruction(sprite) {
+        // Stop any existing animations and interactions
+        sprite.removeListener('pointerdown'); // Remove click listener from the tree
+        sprite.anims.stop();
+    
+        // CREATE DUPLICATE FOR ANIMATION ON TOP OF TREE TRUNK
+        let duplicatedSprite = this.add.sprite(sprite.x, sprite.y, "tree_top");
+        duplicatedSprite.setOrigin(0.5, 0.75);
+        duplicatedSprite.setScale(3, 3);
+        console.log("duplicated sprite:", duplicatedSprite);
+    
+        // Change texture to show a tree trunk
+        sprite.setTexture("destroyedTree");
+        sprite.setData("resourceType", "trunk"); // Update type to trunk
+        sprite.setData("health", 1); // Set new health for trunk
+    
+        // Determine fall direction
+        let left = this.getRandom(0.5); // Randomly decide fall direction
+        let angle = left ? 90 : -90;   // Fall left or right
+        let offsetX = left ? 30 : -30; // Move to the side (negative for left, positive for right)
+    
+        // Make the tree fall sideways
+        this.tweens.add({
+            targets: duplicatedSprite,
+            angle: angle,        // Rotate the sprite
+            x: duplicatedSprite.x + offsetX, // Move sideways
+            duration: 2000,      // Animation duration
+            ease: "Power2",
+            onComplete: () => {
+                console.log('Tree fell.');
+                duplicatedSprite.destroy(); // Remove the falling sprite after animation
+    
+                // Add interaction for the fallen tree trunk
+                sprite.on('pointerdown', () => {
+                    this.dropResource("trunk", sprite); // Drop 1 wood
+                    sprite.destroy(); // Remove the trunk sprite
+                    console.log("Fully destroyed tree trunk.");
+                });
+            }
+        });
+    }
+    
+    
 
     drawTile(x, y, tile) {
         let sprite = this.add.sprite(x, y, tile);
@@ -803,7 +821,37 @@ class Game extends Phaser.Scene {
         }
     }
     
+    displayMessage(messageString) {
+        // Calculate the vertical position for the new message
+        let offsetY = this.activeMessages.length * 50; // Adjust spacing between messages (50px here)
     
+        // Create the text in the center of the screen, adjusted by the current offsetY
+        let message = this.scene.add.text(this.scene.cameras.main.centerX, 
+            this.scene.cameras.main.centerY + 50 + offsetY, 
+            messageString, {
+            fontSize: '32px',
+            color: '#fff',
+            fontStyle: 'bold',
+        });
+    
+        // Set the origin to the center to align it properly
+        message.setOrigin(0.5);
+    
+        // Store the message object in the activeMessages array
+        this.activeMessages.push(message);
+    
+        // Add a tween to fade out the message after 2 seconds
+        this.scene.tweens.add({
+            targets: message,
+            alpha: 0,  // Fade to transparent
+            duration: 2000,  // 2 seconds
+            ease: 'Linear',
+            onComplete: () => {
+                message.destroy();  // Destroy the text object after it fades out
+                this.activeMessages = this.activeMessages.filter(msg => msg !== message);  // Remove from array
+            }
+        });
+    }
     
     
 }
@@ -1225,15 +1273,157 @@ class craftingMenu {
         this.graphics = this.scene.add.graphics();
         this.graphics.setDepth(this.scene.UIDepth);
         this.graphics.setScrollFactor(0);
+
         this.button = this.scene.add.image(1230, 150, "crafting").setDisplaySize(75, 75);
         this.button.setDepth(this.scene.UIDepth);
         this.button.setInteractive();
         this.button.setScrollFactor(0);
         this.button.on("pointerdown", () => {
-            console.log("opening crafting menu");
+            console.log("Toggling crafting menu");
+            this.toggleWindow();
+        });
+
+        this.open = false;
+        this.availableRecipes = [];
+        this.uiItems = [];
+
+        this.recipes = {
+            "woodPlanks": {
+                workbench: "default",
+                ingredients: [
+                    { name: "wood", quantity: 4 },
+                ]
+            },
+            "furnace": {
+                workbench: "default",
+                ingredients: [
+                    { name: "stone", quantity: 4 },
+                ]
+            },
+            "rope": {
+                workbench: "default",
+                ingredients: [
+                    { name: "leather", quantity: 4 },
+                ]
+            },
+            "woodenPickaxe": {
+                workbench: "default",
+                ingredients: [
+                    { name: "wood", quantity: 3 },
+                    { name: "stone", quantity: 1 },
+                ]
+            },
+            "stonePickaxe": {
+                workbench: "level2",
+                ingredients: [
+                    { name: "wood", quantity: 3 },
+                    { name: "stone", quantity: 3 },
+                ]
+            },
+            "ironPickaxe": {
+                workbench: "level3",
+                ingredients: [
+                    { name: "wood", quantity: 3 },
+                    { name: "iron", quantity: 3 },
+                ]
+            },
+            "woodenSword": {
+                workbench: "default",
+                ingredients: [
+                    { name: "wood", quantity: 3 },
+                    { name: "stone", quantity: 2 },
+                ]
+            },
+            "stoneSword": {
+                workbench: "level2",
+                ingredients: [
+                    { name: "wood", quantity: 3 },
+                    { name: "stone", quantity: 3 },
+                ]
+            },
+            "ironSword": {
+                workbench: "level3",
+                ingredients: [
+                    { name: "wood", quantity: 3 },
+                    { name: "iron", quantity: 3 },
+                ]
+            },
+        };
+    }
+
+    updateAvailableRecipes() {
+        this.uiItems.forEach(item => item.destroy());
+        this.uiItems = [];
+
+        this.availableRecipes.forEach((recipe, index) => {
+            const x = 200 + (index % 5) * 100;
+            const y = 200 + Math.floor(index / 5) * 100;
+
+            const slotImage = this.scene.add.image(x, y, "craftingSlot");
+            const itemImage = this.scene.add.image(x, y, recipe);
+
+            slotImage.setDepth(this.scene.UIDepth);
+            slotImage.setScrollFactor(0);
+            itemImage.setDepth(this.scene.UIDepth + 1);
+            itemImage.setScrollFactor(0);
+
+            this.uiItems.push(slotImage, itemImage);
+
+            itemImage.setInteractive();
+            itemImage.on("pointerover", () => {
+                console.log(`Hovered over ${recipe}`);
+            });
         });
     }
+
+    addCraftableItem(itemName) {
+        if (!this.availableRecipes.includes(itemName)) {
+            console.log(`Added ${itemName} to available recipes`);
+            this.availableRecipes.push(itemName);
+            this.updateAvailableRecipes();
+        }
+    }
+
+    checkAvailableRecipes(hotbar) {
+        this.availableRecipes = [];
+
+        Object.keys(this.recipes).forEach(recipeName => {
+            const recipe = this.recipes[recipeName];
+            console.log("recipe", recipe);
+            const canCraft = recipe.ingredients.every(ingredient => {
+                console.log("ingredient", ingredient, ingredient.quantity);
+                if (!hotbar.items[ingredient.name]) {
+                    return false;
+                }
+                return hotbar.items[ingredient.name].count >= ingredient.quantity;
+            });
+
+            if (canCraft) {
+                this.addCraftableItem(recipeName);
+            }
+        });
+    }
+
+    toggleWindow() {
+        this.open = !this.open;
+
+        if (this.open) {
+            console.log("Crafting menu opened");
+            this.graphics.setVisible(true);
+            this.updateAvailableRecipes();
+        } else {
+            console.log("Crafting menu closed");
+            this.graphics.setVisible(false);
+            this.uiItems.forEach(item => item.destroy());
+            this.uiItems = [];
+        }
+    }
+
+    update() {
+        // Add any per-frame updates if necessary
+    }
 }
+
 
 
 class Stats {
@@ -1360,8 +1550,11 @@ class Hotbar {
     }
 
     addItemToHotbar(itemName){
+
+        this.scene.displayMessage(`Picked up ${itemName}`);
         
         // check if image already exists, if so, find image index and increment count
+        
 
         if (this.items[itemName]) {
             this.handleExistingItem(itemName);
@@ -1380,7 +1573,8 @@ class Hotbar {
         };
 
         console.log("Item " + itemName + " added to hotbar");
-    } 
+        this.scene.craftingMenu.checkAvailableRecipes(this);
+    }
 
     selectSlot(slot) {
 
