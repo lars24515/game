@@ -174,12 +174,12 @@ class Game extends Phaser.Scene {
         this.natureSeed = null;
         this.UIDepth = 10;
         this.activeMessages = [];
-      //  this.randomTileGenerator = null;
+        //  this.randomTileGenerator = null;
     }
 
     seedRandom(seed) {
         let value = seed;
-        return function() {
+        return function () {
             value = (value * 16807) % LCG_MODULUS;  // Use the LCG_MODULUS variable here
             return (value - 1) / (LCG_MODULUS - 1); // Normalize the value to a float between 0 and 1
         };
@@ -208,7 +208,7 @@ class Game extends Phaser.Scene {
         // player
         this.load.image("player", "../assets/player/new still.png");
         this.load.image("playerHolding", "../assets/player/holding.png");
- 
+
         this.load.image("grass0", "../assets/resources/grass/0.png");
         this.load.image("grass1", "../assets/resources/grass/1.png");
         this.load.image("grass2", "../assets/resources/grass/2.png");
@@ -235,7 +235,7 @@ class Game extends Phaser.Scene {
         this.load.image("woodDoor", "../assets/building/wood_door.png");
         this.load.image("woodPlanks", "../assets/building/wood_floor.png");
         this.load.image("woodWall", "../assets/building/wood_wall.png");
-        
+
         // food
         this.load.image("apple", "../assets/Items/tile224.png");
         this.load.image("banana", "../assets/Items/tile225.png");
@@ -255,7 +255,7 @@ class Game extends Phaser.Scene {
         this.load.image("woodenPickaxe", "../assets/items/wooden_pickaxe.png");
         this.load.image("woodenAxe", "../assets/items/wooden_axe.png");
         this.load.image("woodenMace", "../assets/items/tile093.png");
-        
+
         // metal
         this.load.image("ironSword", "../assets/items/iron_sword.png");
         this.load.image("ironPickaxe", "../assets/items/iron_pickaxe.png");
@@ -274,8 +274,9 @@ class Game extends Phaser.Scene {
         this.load.image("thirst", "../assets/ui/thirst_icon.png");
         this.load.image("stamina", "../assets/ui/stamina_icon.png");
         this.load.image("crafting", "../assets/ui/crafting.png");
+        this.load.image("craftingMenu", "../assets/ui/craftingMenu.png");
         this.load.image("craftingSlot", "../assets/ui/crafting_slot.png");
-        
+
 
         console.log("Preloaded assets");
     }
@@ -293,42 +294,42 @@ class Game extends Phaser.Scene {
         // player spritesheet
         this.anims.create({
             key: "idleDown",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[0, 1, 2]}),
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [0, 1, 2] }),
             frameRate: 7,
             repeat: -1,
         })
 
         this.anims.create({
             key: "idleSide",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[8, 9, 10]}),
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [8, 9, 10] }),
             frameRate: 7,
             repeat: -1,
         })
 
         this.anims.create({
             key: "idleUp",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[16, 17, 18]}),
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [16, 17, 18] }),
             frameRate: 7,
             repeat: -1,
         })
 
         this.anims.create({
             key: "runDown",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[24, 25, 26, 27]}),
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [24, 25, 26, 27] }),
             frameRate: 7,
             repeat: -1,
         })
 
         this.anims.create({
             key: "runSide",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[32, 33, 34, 35]}),
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [32, 33, 34, 35] }),
             frameRate: 7,
             repeat: -1,
         })
 
         this.anims.create({
             key: "runUp",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", {frames:[40, 41, 42, 43]}),
+            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [40, 41, 42, 43] }),
             frameRate: 7,
             repeat: -1,
         })
@@ -337,28 +338,28 @@ class Game extends Phaser.Scene {
 
         this.anims.create({
             key: "zombieIdle",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[0, 1, 2, 3, 4, 5, 6, 7]}),
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [0, 1, 2, 3, 4, 5, 6, 7] }),
             frameRate: 10,
             repeat: -1,
         })
 
         this.anims.create({
             key: "zombieAttack",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[13, 14, 15, 16, 17, 18, 19]}),
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [13, 14, 15, 16, 17, 18, 19] }),
             framerate: 10,
             repeat: -1,
         })
 
         this.anims.create({
             key: "zombieWalk",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[26, 27, 28, 29, 30, 31, 32, 33]}),
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [26, 27, 28, 29, 30, 31, 32, 33] }),
             framerate: 10,
             repeat: -1,
         })
 
         this.anims.create({
             key: "zombieDeath",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", {frames:[65, 66, 67, 68, 69, 70, 71, 72]}),
+            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [65, 66, 67, 68, 69, 70, 71, 72] }),
             framerate: 10,
             repeat: -1,
         })
@@ -381,7 +382,7 @@ class Game extends Phaser.Scene {
         });
 
 
-        
+
 
         // textures
 
@@ -450,7 +451,7 @@ class Game extends Phaser.Scene {
             "mountain": {
                 "stone": 4,
                 "metal_ore": 1,
-            }, 
+            },
             "trunk": {
                 "wood": 1,
             }
@@ -460,7 +461,7 @@ class Game extends Phaser.Scene {
         window.network = new Network(this); // Pass this scene to Network
     }
 
-    pickUpItem(item){
+    pickUpItem(item) {
         // banner animation
         // sound effect
         // add item to hotbar
@@ -470,29 +471,29 @@ class Game extends Phaser.Scene {
     }
 
     moveItem(item) {
-        let randomAngle = Phaser.Math.Between(0, 360); 
-        let randomDistance = Phaser.Math.Between(50, 100); 
-    
+        let randomAngle = Phaser.Math.Between(0, 360);
+        let randomDistance = Phaser.Math.Between(50, 100);
+
         let offsetX = Math.cos(Phaser.Math.DegToRad(randomAngle)) * randomDistance;
         let offsetY = Math.sin(Phaser.Math.DegToRad(randomAngle)) * randomDistance;
-    
+
         // First movement tween
         this.tweens.add({
             targets: item,
             x: item.x + offsetX,
             y: item.y + offsetY,
-            duration: 1000, 
+            duration: 1000,
             ease: "Power2",
             onComplete: () => {
                 console.log("First movement complete");
-    
+
                 // Second movement tween (move to player)
                 this.tweens.add({
                     targets: item,
                     x: this.localPlayer.sprite.x,
                     y: this.localPlayer.sprite.y,
-                    duration: 1000, 
-                    ease: "Expo.easeIn", 
+                    duration: 1000,
+                    ease: "Expo.easeIn",
                     onComplete: () => {
                         console.log("Item returned to player");
                         this.pickUpItem(item);
@@ -501,7 +502,7 @@ class Game extends Phaser.Scene {
             }
         });
     }
-    
+
 
     dropItem(item, amount, parentSprite) {
 
@@ -520,38 +521,38 @@ class Game extends Phaser.Scene {
             this.moveItem(droppedItem);
         }
     }
-    
+
 
     dropResource(resourceType, sprite) {
         if (!this.resourceDrops[resourceType]) {
             console.error(`Resource type '${resourceType}' does not exist in resourceDrops`);
             return;
         }
-    
+
         let drops = Object.keys(this.resourceDrops[resourceType]);
-    
+
         drops.forEach(drop => {
-            let amount = this.resourceDrops[resourceType][drop]; 
-            this.dropItem(drop, amount, sprite); 
+            let amount = this.resourceDrops[resourceType][drop];
+            this.dropItem(drop, amount, sprite);
             console.log(`Dropping ${amount} of ${drop}`);
         });
     }
-    
-    
+
+
     swingTool(toolImage) {
         this.tweens.add({
             targets: toolImage,
             angle: 45,
-            duration: 200, 
-            yoyo: true, 
-            repeat: 0,  
+            duration: 200,
+            yoyo: true,
+            repeat: 0,
             onComplete: () => {
                 console.log('animation completed');
             }
         });
     }
 
-    handleMovement(){
+    handleMovement() {
         if (this.cursors.up.isDown || this.wasdKeys.up.isDown) {
             this.localPlayer.move();
         }
@@ -565,19 +566,19 @@ class Game extends Phaser.Scene {
         this.handleMovement(); // cleaner
 
         this.handleHotbarKeys();
-        
+
 
         this.hotbar.render();
         this.playerStats.render();
 
-       // this.updateOtherClientsHolding();
+        // this.updateOtherClientsHolding();
         this.renderOtherHolding();
         this.renderDisplayNames();
     }
 
-    handleKeyDown(key){
-        if (this.hotbarKeys[key]){ // key is either 1, 2, 3..
-            if (key == this.hotbar.selectedSlot+1) return; 
+    handleKeyDown(key) {
+        if (this.hotbarKeys[key]) { // key is either 1, 2, 3..
+            if (key == this.hotbar.selectedSlot + 1) return;
             // no need to select same slot multiple times
             this.hotbar.selectSlot(key - 1); // select slot
         }
@@ -595,7 +596,7 @@ class Game extends Phaser.Scene {
     getRandom(chance) {
         return Math.random() < chance; // 'chance' is a value between 0 and 1
     }
-    
+
 
     getRandomElement(array) {
         const randomIndex = Phaser.Math.Between(0, array.length - 1);
@@ -606,18 +607,18 @@ class Game extends Phaser.Scene {
         // Iterate through all players in the player list
         for (let UUID in this.playerList) {
             const player = this.playerList[UUID];
-    
+
             // Check if a display name text object already exists
             if (!player.nameText) {
                 // Create and store the name text object above the player sprite
                 player.nameText = this.add.text(
-                    player.sprite.x, 
+                    player.sprite.x,
                     player.sprite.y - 20,  // Slightly above the sprite
                     player.name,            // Display player name
                     { font: '25px Arial', fill: '#fff', align: 'center' }
                 ).setOrigin(0.5, 2).setDepth(10); // Center align, above other objects
             }
-    
+
             // Update the text object's position to follow the player's sprite
             player.nameText.setPosition(player.sprite.x, player.sprite.y - 20);
         }
@@ -632,13 +633,13 @@ class Game extends Phaser.Scene {
         return image;
     }
 
-    renderOtherHolding(){
-       // console.log("DEBUG plagerlist=", this.playerList);
-        for (let player of Object.keys(this.playerList)){
-          //  console.log("DEUBUG player=", player);
+    renderOtherHolding() {
+        // console.log("DEBUG plagerlist=", this.playerList);
+        for (let player of Object.keys(this.playerList)) {
+            //  console.log("DEUBUG player=", player);
             let target = this.playerList[player];
 
-          //  console.log("DEBUG target=", target);
+            //  console.log("DEBUG target=", target);
             if (target.holding == "") continue; // if target holding NULL, skip
             // else, render at correspnding position
 
@@ -646,63 +647,63 @@ class Game extends Phaser.Scene {
             let angleInRadians = Phaser.Math.DegToRad(target.sprite.angle + this.angleOffset);
             let offsetX = Math.cos(angleInRadians) * this.OthersOffsetDistance;
             let offsetY = Math.sin(angleInRadians) * this.OthersOffsetDistance;
-    
+
             // Set position of the holding image in front of the player
-           // target.holdingImage.setPosition(target.sprite.x + offsetX, target.sprite.y + offsetY);
+            // target.holdingImage.setPosition(target.sprite.x + offsetX, target.sprite.y + offsetY);
             target.holdingImage.setPosition(target.x + offsetX, target.y + offsetY);
             target.holdingImage.setOrigin(0, 0.3);
-            
+
             // Set the holding image's angle to exactly match the player's angle
             target.holdingImage.setAngle(target.sprite.angle - 45);
-           // console.log("rendered holding image for", target.name, "at", target.holdingImage.x, target.holdingImage.y);
+            // console.log("rendered holding image for", target.name, "at", target.holdingImage.x, target.holdingImage.y);
         }
     }
 
     handleResourceHit(resourceType, sprite) {
         // if not holding tool to destroy tree, do nothing
         if (!this.localPlayer.holdingImage) return;
-    
+
         this.swingTool(this.localPlayer.holdingImage);
-    
+
         let currentHealth = sprite.getData('health');
         sprite.setData('health', currentHealth - 1);
-    
+
         console.log(`hit ${resourceType}, health: ${sprite.getData('health')}`);
-        
+
         // check if object is destroyed
         if (sprite.getData('health') <= 0) {
             this.dropResource(resourceType, sprite);
-    
+
             if (resourceType === "tree") {
                 this.handleTreeDestruction(sprite);
                 return;
             }
-    
+
             sprite.destroy();
         }
     }
-    
+
     handleTreeDestruction(sprite) {
         // Stop any existing animations and interactions
         sprite.removeListener('pointerdown'); // Remove click listener from the tree
         sprite.anims.stop();
-    
+
         // CREATE DUPLICATE FOR ANIMATION ON TOP OF TREE TRUNK
         let duplicatedSprite = this.add.sprite(sprite.x, sprite.y, "tree_top");
         duplicatedSprite.setOrigin(0.5, 0.75);
         duplicatedSprite.setScale(3, 3);
         console.log("duplicated sprite:", duplicatedSprite);
-    
+
         // Change texture to show a tree trunk
         sprite.setTexture("destroyedTree");
         sprite.setData("resourceType", "trunk"); // Update type to trunk
         sprite.setData("health", 1); // Set new health for trunk
-    
+
         // Determine fall direction
         let left = this.getRandom(0.5); // Randomly decide fall direction
         let angle = left ? 90 : -90;   // Fall left or right
         let offsetX = left ? 30 : -30; // Move to the side (negative for left, positive for right)
-    
+
         // Make the tree fall sideways
         this.tweens.add({
             targets: duplicatedSprite,
@@ -713,7 +714,7 @@ class Game extends Phaser.Scene {
             onComplete: () => {
                 console.log('Tree fell.');
                 duplicatedSprite.destroy(); // Remove the falling sprite after animation
-    
+
                 // Add interaction for the fallen tree trunk
                 sprite.on('pointerdown', () => {
                     this.dropResource("trunk", sprite); // Drop 1 wood
@@ -723,18 +724,18 @@ class Game extends Phaser.Scene {
             }
         });
     }
-    
-    
+
+
 
     drawTile(x, y, tile) {
         let sprite = this.add.sprite(x, y, tile);
         sprite.setOrigin(0, 0);
-    
+
         // Calculate the scale factor based on tile size
         let scaleX = this.tileSize / sprite.width;
         let scaleY = this.tileSize / sprite.height;
 
-        if (tile == "tree"){ // make tree tile cover 2 tiles
+        if (tile == "tree") { // make tree tile cover 2 tiles
             scaleY = 3;
             scaleX = 3;
             sprite.setOrigin(0.5, 0.75);
@@ -747,7 +748,7 @@ class Game extends Phaser.Scene {
             sprite.setInteractive();
 
             sprite.on('pointerdown', () => {
-                /* handle pointerdown */ 
+                /* handle pointerdown */
                 this.handleResourceHit(tile, sprite);
             });
             sprite.on('pointerout', () => {  // AND POINTER UP
@@ -759,20 +760,20 @@ class Game extends Phaser.Scene {
             sprite.setData('health', 5);
 
 
-        } else if (tile == "sugarcane"){
+        } else if (tile == "sugarcane") {
             scaleY = 3;
             //scaleX = 3;
             sprite.setOrigin(0, 0.5);
             sprite.setTexture("sugarcane");
         }
-        
-    
+
+
         // Set the scale to maintain aspect ratio
         sprite.setScale(scaleX, scaleY);
-    
-        this.tiles.add(sprite);    
+
+        this.tiles.add(sprite);
     }
-    
+
 
     getTile(x, y, noiseGenerator, noiseScale) {
         let v = noiseGenerator.noise2D(x * noiseScale, y * noiseScale);
@@ -786,15 +787,15 @@ class Game extends Phaser.Scene {
             return "mountain";
         }
     }
-    
+
 
     generateWorld(seed) {
         console.log("hi");
         const noiseGenerator = new SimplexNoise(seed);
         console.log("created noise map", noiseGenerator, "with seed", seed);
-    
+
         const natureRandom = this.seedRandom(this.natureSeed);
-    
+
         for (let i = 0; i < this.worldSize / this.tileSize; i++) {
             for (let j = 0; j < this.worldSize / this.tileSize; j++) {
 
@@ -805,7 +806,7 @@ class Game extends Phaser.Scene {
                     if (natureRandom() < 0.05) {
                         this.drawTile(this.tileSize * i, this.tileSize * j, "tree");
                     }
-                } else if (tileType == "sand"){
+                } else if (tileType == "sand") {
                     this.drawTile(this.tileSize * i, this.tileSize * j, "sand");
 
                     if (natureRandom() < 0.2) {
@@ -816,32 +817,33 @@ class Game extends Phaser.Scene {
                     this.drawTile(this.tileSize * i, this.tileSize * j, tileType);
                 }
 
-                 
+
             }
         }
     }
-    
+
     displayMessage(messageString) {
         // Calculate the vertical position for the new message
         let offsetY = this.activeMessages.length * 50; // Adjust spacing between messages (50px here)
-    
+
         // Create the text in the center of the screen, adjusted by the current offsetY
-        let message = this.scene.add.text(this.scene.cameras.main.centerX, 
-            this.scene.cameras.main.centerY + 50 + offsetY, 
+        let message = this.add.text(this.cameras.main.centerX,
+            this.cameras.main.centerY + 50 + offsetY,
             messageString, {
             fontSize: '32px',
             color: '#fff',
             fontStyle: 'bold',
         });
-    
+
         // Set the origin to the center to align it properly
         message.setOrigin(0.5);
-    
+        message.setScrollFactor(0);
+
         // Store the message object in the activeMessages array
         this.activeMessages.push(message);
-    
+
         // Add a tween to fade out the message after 2 seconds
-        this.scene.tweens.add({
+        this.tweens.add({
             targets: message,
             alpha: 0,  // Fade to transparent
             duration: 2000,  // 2 seconds
@@ -852,8 +854,8 @@ class Game extends Phaser.Scene {
             }
         });
     }
-    
-    
+
+
 }
 
 class Player {
@@ -876,10 +878,10 @@ class Player {
         // Server object
         this.playerObject = {
             name: name,
-           // color: color,
+            // color: color,
             x: 0,
             y: 0,
-         //   facing: "",
+            //   facing: "",
             holding: "",
         };
     }
@@ -888,43 +890,43 @@ class Player {
         if (this.holdingImage) {
 
             let angleInRadians = Phaser.Math.DegToRad(this.sprite.angle + this.angleOffset);
-    
+
             let offsetX = Math.cos(angleInRadians) * this.offsetDistance;
             let offsetY = Math.sin(angleInRadians) * this.offsetDistance;
-            
+
             offsetY += 35; // default
 
             // change offset based on direction
 
-            if (this.facing == "left"){
+            if (this.facing == "left") {
                 offsetX -= 35;
-                if (!this.holdingImage.flipX){ this.holdingImage.flipX = true; }; 
+                if (!this.holdingImage.flipX) { this.holdingImage.flipX = true; };
             } else { // facing right
-              //  offsetX += 35;    
-                if (this.holdingImage.flipX){ this.holdingImage.flipX = false; };
+                //  offsetX += 35;    
+                if (this.holdingImage.flipX) { this.holdingImage.flipX = false; };
             }
-    
+
             this.holdingImage.setPosition(this.sprite.x + offsetX, this.sprite.y + offsetY);
             this.holdingImage.setOrigin(0, 0);
-            
-           
+
+
         }
     }
-    
-    
 
-    setHoldImage(image){
-        if (this.holdingImage){
+
+
+    setHoldImage(image) {
+        if (this.holdingImage) {
             this.holdNothing();
         }
         // Create the holding image and set its position
         this.holdingImage = this.scene.add.image(this.sprite.x, this.sprite.y, image);
         this.holdingImage.setDepth(50);
         //this.holdingImage.setScale(1);
-        
+
         // Update the player object with the current holding image
         this.playerObject.holding = image;
-        
+
         // DO NOT UPDATE PLAYER IMAGE, NEW SPRITE
         // Optionally update the player's main sprite texture
         //this.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
@@ -944,7 +946,7 @@ class Player {
 
     }
 
-    holdNothing(){
+    holdNothing() {
         this.holdingImage.destroy();
         this.holdingImage = null;
         this.playerObject.holding = "";
@@ -958,7 +960,7 @@ class Player {
         };
         network.send(JSON.stringify(data));
     }
-    
+
 
     calculateHandAngle(scene) {
         let pointer = scene.input.activePointer;
@@ -971,8 +973,8 @@ class Player {
         return angleInDegrees;
     }
 
-    renderPlayerHand(angle){
-       // this.sprite.angle = angle-this.angleOffset;
+    renderPlayerHand(angle) {
+        // this.sprite.angle = angle-this.angleOffset;
         // dont rotate player
 
         this.internalAngle = angle - this.angleOffset;
@@ -1002,53 +1004,53 @@ class Player {
         network.send(JSON.stringify(data));
     }
 
-    setIdleState(){
+    setIdleState() {
         // switch this.angle, corresponding image up down left whatever
         if (this.internalAngle >= 45 && this.internalAngle < 135) {
             // Face left
             this.sprite.play("idleSide", true);
-            this.sprite.flipX = false; 
+            this.sprite.flipX = false;
             this.facing = "right";
         } else if (this.internalAngle >= 135 && this.internalAngle < 225) {
             // Face up
             this.sprite.play("idleDown", true);
-            this.sprite.flipX = false;  
+            this.sprite.flipX = false;
         } else if (this.internalAngle >= 225 && this.internalAngle < 315) {
             // Face right
             this.sprite.play("idleSide", true);
-            this.sprite.flipX = true; 
+            this.sprite.flipX = true;
             this.facing = "left";
         } else {
             // Face down (default case for angles 0 to 45 and 315 to 360)
             this.sprite.play("idleUp", true);
-            this.sprite.flipX = false;  
+            this.sprite.flipX = false;
         }
     }
-    
 
-    setWalkingState(){
+
+    setWalkingState() {
         // switch this.angle, corresponding image up down left whatever
         if (this.internalAngle >= 45 && this.internalAngle < 135) {
             // Face left
             this.sprite.play("runSide", true);
-            this.sprite.flipX = false; 
+            this.sprite.flipX = false;
             this.facing = "right";
         } else if (this.internalAngle >= 135 && this.internalAngle < 225) {
             // Face up
             this.sprite.play("runDown", true);
-            this.sprite.flipX = false;  
+            this.sprite.flipX = false;
         } else if (this.internalAngle >= 225 && this.internalAngle < 315) {
             // Face right
             this.sprite.play("runSide", true);
-            this.sprite.flipX = true; 
+            this.sprite.flipX = true;
             this.facing = "left";
         } else {
             // Face down (default case for angles 0 to 45 and 315 to 360)
             this.sprite.play("runUp", true);
-            this.sprite.flipX = false;  
+            this.sprite.flipX = false;
         }
     }
-    
+
 
     move() {
         // calculate angle
@@ -1064,14 +1066,14 @@ class Player {
 
         this.onPlayerMove(); // update server
     }
-    
+
 }
 
 class Network {
     constructor(gameScene) {
-        this.gameScene = gameScene; 
+        this.gameScene = gameScene;
         this.socket = new WebSocket('ws://localhost:6969');
-        this.socket.onopen = function(event) {
+        this.socket.onopen = function (event) {
             console.log('Connected to WebSocket server');
             const data = JSON.stringify({
                 type: "playerJoined",
@@ -1081,20 +1083,20 @@ class Network {
             console.log("Sent playerJoined from client");
         }.bind(this);
 
-        this.socket.onclose = function(event) {
+        this.socket.onclose = function (event) {
             console.log('Disconnected from WebSocket server');
             window.location.href = "../src/index.html";
         };
 
-        
 
-        this.socket.onmessage = function(event) {
+
+        this.socket.onmessage = function (event) {
             const data = JSON.parse(event.data);
             switch (data.type) {
                 case "worldSeed":
                     console.log("h222i");
                     const seed = data.seed;
-                    const natureSeed = data.natureSeed; 
+                    const natureSeed = data.natureSeed;
                     const worldSize = data.worldSize;
                     const chunkSize = data.chunkSize;
                     const tileSize = data.tileSize;
@@ -1120,7 +1122,7 @@ class Network {
                     console.log("generating world with seed: " + seed);
                     this.gameScene.generateWorld(seed);
                     break;
-                
+
                 case "playerList":
                     for (let key in data.playerList) {
                         const value = data.playerList[key];
@@ -1140,8 +1142,8 @@ class Network {
                     break;
                 case "updatePlayer":
                     if (data.UUID == this.gameScene.localPlayer.UUID) return;
-            
-                    switch(data.property) {
+
+                    switch (data.property) {
                         case "position":
                             this.updatePlayerPosition(data);
                             break;
@@ -1159,9 +1161,9 @@ class Network {
                         return; // no further inquiries
                     }
 
-                // player is someone else than itself, check if it already exists in list
+                    // player is someone else than itself, check if it already exists in list
 
-                    if (this.gameScene.playerList[data.UUID]){
+                    if (this.gameScene.playerList[data.UUID]) {
                         console.log("Player with UUID: " + data.UUID + " already exists.");
                         return;
                     }; //player exists
@@ -1169,7 +1171,7 @@ class Network {
                     // player didnt exist, so handle the player join
 
                     this.handlePlayerJoined(data.UUID, data.player);
-                    
+
                     break;
                 default:
                     console.log("Unknown message type:", data.type);
@@ -1178,11 +1180,11 @@ class Network {
         }.bind(this);
     }
 
-    updatePlayerHolding(data){
+    updatePlayerHolding(data) {
         console.log("received holding data from", data.UUID);
-        if (data.value == "Nothing"){
+        if (data.value == "Nothing") {
             let target = this.gameScene.playerList[data.UUID];
-            
+
             target.holdingImage.destroy();
             target.holdingImage = null;
             target.holding = "";
@@ -1192,11 +1194,11 @@ class Network {
             console.log("data not nothing");
             let image = data.value;
             let target = this.gameScene.playerList[data.UUID];
-   
+
             let imageX = Number.isNaN(target.sprite.x) ? 0 : target.sprite.x;
             let imageY = Number.isNaN(target.sprite.y) ? 0 : target.sprite.y;
- 
-            console.log("imageX =", imageX, "imageY =", imageY);    
+
+            console.log("imageX =", imageX, "imageY =", imageY);
 
             // RETURNS CREATE FUNCTION RATHER THAN IMAGE OBJECT?
 
@@ -1205,14 +1207,14 @@ class Network {
             target.holdingImage = this.gameScene.add.image(imageX, imageY, image).setOrigin(0, 0.3);
             console.log("IMAGE COORDS", target.holdingImage.x, target.holdingImage.y);
             console.log("DEBUG imag3333e =", target.holdingImage);
-            
+
 
             target.holdingImage.setDepth(50);
             //this.holdingImage.setScale(1);
-            
+
             // Update the player object with the current holding image
             target.holding = image; // image object name string
-            
+
             // Optionally update the player's main sprite texture
             target.sprite.setTexture("playerHolding"); // Ensure the image has been preloaded
             console.log(`set ${target.name} image to holding ${image}`);
@@ -1221,8 +1223,8 @@ class Network {
         }
     }
 
-    updatePlayerPosition(data){
-      //  console.log(this.gameScene.playerList);
+    updatePlayerPosition(data) {
+        //  console.log(this.gameScene.playerList);
         this.gameScene.playerList[data.UUID].sprite.x = data.x;
         this.gameScene.playerList[data.UUID].sprite.y = data.y;
         this.gameScene.playerList[data.UUID].sprite.angle = data.angle;
@@ -1230,17 +1232,17 @@ class Network {
         this.gameScene.playerList[data.UUID].x = data.x;
         this.gameScene.playerList[data.UUID].y = data.y;
 
-       // console.log("updated player position: ", data.UUID);
+        // console.log("updated player position: ", data.UUID);
     }
 
-    createSprite(origin, scale, image){
+    createSprite(origin, scale, image) {
         let sprite = this.gameScene.physics.add.sprite(100, 100, image);
         sprite.setOrigin(origin, origin);
         sprite.setScale(scale);
         sprite.setDepth(10);
         return sprite;
     }
-    
+
 
     handlePlayerJoined(UUID, playerObject) {
 
@@ -1257,10 +1259,10 @@ class Network {
             holding: "",
             holdingImage: null,
         };
-    
+
         console.log("Player joined: ", playerObject.name, "with UUID:", UUID);
     }
-    
+
 
     send(data) {
         this.socket.send(data);
@@ -1282,6 +1284,11 @@ class craftingMenu {
             console.log("Toggling crafting menu");
             this.toggleWindow();
         });
+
+        this.menuImage = this.scene.add.image(config.width / 2 - 305, config.height / 2 - (439 / 2), "craftingMenu");
+        this.menuImage.setScrollFactor(0);
+        this.menuImage.setDepth(this.scene.UIDepth);
+        this.menuImage.setVisible(false);
 
         this.open = false;
         this.availableRecipes = [];
@@ -1351,13 +1358,28 @@ class craftingMenu {
         };
     }
 
+    craftItem(itemName, ingredients) {
+
+        // remove items from hotbar
+        ingredients.forEach(ingredient => {
+            this.scene.hotbar.adjustItem(ingredient.name, ingredient.quantity);
+        })
+
+        // add crafted item to hotbar
+        this.scene.hotbar.addItemToHotbar(itemName);
+        console.log(`Crafted ${itemName}`);
+        this.updateAvailableRecipes();
+        
+
+    }
+
     updateAvailableRecipes() {
         this.uiItems.forEach(item => item.destroy());
         this.uiItems = [];
 
         this.availableRecipes.forEach((recipe, index) => {
-            const x = 200 + (index % 5) * 100;
-            const y = 200 + Math.floor(index / 5) * 100;
+            const x = 500 + (index % 5) * 100;
+            const y = 250 + Math.floor(index / 5) * 100;
 
             const slotImage = this.scene.add.image(x, y, "craftingSlot");
             const itemImage = this.scene.add.image(x, y, recipe);
@@ -1370,8 +1392,9 @@ class craftingMenu {
             this.uiItems.push(slotImage, itemImage);
 
             itemImage.setInteractive();
-            itemImage.on("pointerover", () => {
-                console.log(`Hovered over ${recipe}`);
+            itemImage.on("pointerup", () => {
+                console.log(`clicked over ${recipe}`);
+                this.craftItem(recipe, this.recipes[recipe].ingredients);
             });
         });
     }
@@ -1389,9 +1412,9 @@ class craftingMenu {
 
         Object.keys(this.recipes).forEach(recipeName => {
             const recipe = this.recipes[recipeName];
-            console.log("recipe", recipe);
+            //console.log("recipe", recipe);
             const canCraft = recipe.ingredients.every(ingredient => {
-                console.log("ingredient", ingredient, ingredient.quantity);
+               // console.log("ingredient", ingredient, ingredient.quantity);
                 if (!hotbar.items[ingredient.name]) {
                     return false;
                 }
@@ -1409,9 +1432,11 @@ class craftingMenu {
 
         if (this.open) {
             console.log("Crafting menu opened");
+            this.menuImage.setVisible(true);
             this.graphics.setVisible(true);
             this.updateAvailableRecipes();
         } else {
+            this.menuImage.setVisible(false);
             console.log("Crafting menu closed");
             this.graphics.setVisible(false);
             this.uiItems.forEach(item => item.destroy());
@@ -1449,14 +1474,14 @@ class Stats {
             stamina: {
                 color: "0xADD8E6",
             },
-        };        
+        };
 
         this.healthIcon = null;
         this.hungerIcon = null;
         this.staminaIcon = null;
     }
 
-    valueToWidth(){
+    valueToWidth() {
 
     }
 
@@ -1471,18 +1496,18 @@ class Stats {
         this.graphics.fillRect(this.barX, Y, this.barWidth, 20);
 
 
-        if (this.healthIcon == null && color == "0x00FF00"){
-            this.healthIcon = this.scene.createStaticImage("health", this.barX+this.barWidth+this.iconOffset, Y);
+        if (this.healthIcon == null && color == "0x00FF00") {
+            this.healthIcon = this.scene.createStaticImage("health", this.barX + this.barWidth + this.iconOffset, Y);
             this.healthIcon.setScrollFactor(0);
         }
 
-        if (this.hungerIcon == null && color == "0x964B00"){
-            this.hungerIcon = this.scene.createStaticImage("hunger", this.barX+this.barWidth+this.iconOffset, Y);
+        if (this.hungerIcon == null && color == "0x964B00") {
+            this.hungerIcon = this.scene.createStaticImage("hunger", this.barX + this.barWidth + this.iconOffset, Y);
             this.hungerIcon.setScrollFactor(0);
         }
 
-        if (this.staminaIcon == null && color == "0xADD8E6"){
-            this.staminaIcon = this.scene.createStaticImage("stamina", this.barX+this.barWidth+this.iconOffset, Y);
+        if (this.staminaIcon == null && color == "0xADD8E6") {
+            this.staminaIcon = this.scene.createStaticImage("stamina", this.barX + this.barWidth + this.iconOffset, Y);
             this.staminaIcon.setScrollFactor(0);
         }
     }
@@ -1511,9 +1536,25 @@ class Hotbar {
         this.slotTransparency = 0.5;
 
         this.maxSlotCount = 9;
-        this.itemYPos = 40+this.slotSize/2;
+        this.itemYPos = 40 + this.slotSize / 2;
         this.graphics.setDepth(this.scene.UIDepth);
         this.graphics.setScrollFactor(0);
+    }
+
+    adjustItem(item, count) {
+        if (!this.items[item]) return; // if item not in inventory stop
+
+        this.items[item].count -= count;
+        if (this.items[item].count < 0) {
+            console.log(`cannot subtract ${count} from ${item}`);
+            return;
+        }
+
+        if (this.items[item].count == 0) {
+            // remove item as it has count 0
+            delete this.items[item];
+            console.log(`removed ${item} from hotbar`);
+        }
     }
 
     renderItemCounts() {
@@ -1522,20 +1563,20 @@ class Hotbar {
 
             if (!item.countText) {
                 item.countText = this.scene.add.text(
-                    item.image.x + this.itemSize / 2, 
+                    item.image.x + this.itemSize / 2,
                     item.image.y - 10,
-                    item.count.toString(),            
+                    item.count.toString(),
                     { font: '15px Arial', fill: '#fff', align: 'center' }
-                ).setOrigin(0.5, 1).setDepth(this.scene.UIDepth).setScrollFactor(0); 
+                ).setOrigin(0.5, 1).setDepth(this.scene.UIDepth).setScrollFactor(0);
                 // scrollfactor makes it not follow camera
             }
-            
+
             item.countText.setPosition(item.image.x + this.itemSize / 2, item.image.y - 10);
             item.countText.setText(item.count.toString());
         }
     }
-    
-    getXPosition(){
+
+    getXPosition() {
         let index = Object.keys(this.items).length;
         let calculatedItemX = this.padding + index * this.xPadding;
         let offset = this.slotSize / 2;
@@ -1549,12 +1590,12 @@ class Hotbar {
         console.log("Item " + itemName + " incremented by 1");
     }
 
-    addItemToHotbar(itemName){
+    addItemToHotbar(itemName) {
 
         this.scene.displayMessage(`Picked up ${itemName}`);
-        
+
         // check if image already exists, if so, find image index and increment count
-        
+
 
         if (this.items[itemName]) {
             this.handleExistingItem(itemName);
@@ -1591,9 +1632,9 @@ class Hotbar {
             return;
         }
 
-        
 
-       // this.scene.localPlayer.playerObject.holding = Object.values()
+
+        // this.scene.localPlayer.playerObject.holding = Object.values()
         console.log("holding", Object.keys(this.items)[slot]);
         this.scene.localPlayer.setHoldImage(Object.keys(this.items)[slot]);
 
@@ -1608,7 +1649,7 @@ class Hotbar {
             this.slotSize                                     // Height matches the square
         );
     }
-    
+
     renderSquare(x) {
         this.graphics.fillStyle(0x000000, this.slotTransparency);
         this.graphics.fillRect(
@@ -1618,7 +1659,7 @@ class Hotbar {
             this.slotSize      // Height
         );
     }
-    
+
 
     render() {
         this.graphics.clear();
