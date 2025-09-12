@@ -175,6 +175,12 @@ class Game extends Phaser.Scene {
         this.UIDepth = 10;
         this.activeMessages = [];
         //  this.randomTileGenerator = null;
+        this.tools = {
+            // name all tools, on block hit if item not tool, then default to 1 hit. else, take damage specified in this object
+        };
+        this.placeableBlocks = {
+            // when holdin item, if item in placables, show where you are placing the block.
+        };
     }
 
     seedRandom(seed) {
@@ -822,13 +828,17 @@ class Game extends Phaser.Scene {
         }
     }
 
+    calculateMessageWidth(messageString, fontSize) {
+        return messageString.length*fontSize
+    }
+
     displayMessage(messageString) {
         // Calculate the vertical position for the new message
         let offsetY = this.activeMessages.length * 50; // Adjust spacing between messages (50px here)
 
         // Create the text in the center of the screen, adjusted by the current offsetY
-        let message = this.add.text(this.cameras.main.centerX,
-            this.cameras.main.centerY + 50 + offsetY,
+        let message = this.add.text(this.cameras.main.centerX - this.calculateMessageWidth(messageString, 32) / 2,
+            this.cameras.main.centerY + 50 - offsetY,
             messageString, {
             fontSize: '32px',
             color: '#fff',
@@ -1072,7 +1082,7 @@ class Player {
 class Network {
     constructor(gameScene) {
         this.gameScene = gameScene;
-        this.socket = new WebSocket('ws://localhost:6969');
+        this.socket = new WebSocket('ws://51.120.1.0:25565/');
         this.socket.onopen = function (event) {
             console.log('Connected to WebSocket server');
             const data = JSON.stringify({
@@ -1292,6 +1302,12 @@ class craftingMenu {
 
         this.open = false;
         this.availableRecipes = [];
+        this.uiItems = [];
+
+        this.menuImage.setVisible(false);
+        console.log("Crafting menu is closed");
+        this.graphics.setVisible(false);
+        this.uiItems.forEach(item => item.destroy()); // load from user data when added instead of resetting
         this.uiItems = [];
 
         this.recipes = {
