@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Play</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        input { padding: 8px; font-size: 16px; margin-bottom: 10px; }
+        button { padding: 8px 16px; font-size: 16px; cursor: pointer; }
+        #error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Enter Your Player Name</h1>
+    <input type="text" id="playerName" placeholder="Player Name">
+    <button onclick="play()">Play</button>
+    <div id="error"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("document loaded");
+        });
+
+        async function play() {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '';
+
+            try {
+                const playerName = document.getElementById("playerName").value;
+                if (playerName.length === 0) {
+                    throw new Error("Name cannot be empty");
+                }
+
+                const response = await fetch('/play', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerName })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.message === "OK") {
+                    // Redirect to game page
+                    window.location.href = "/Game/game.html?username=" + encodeURIComponent(playerName);
+                } else {
+                    errorDiv.textContent = "Invalid data sent to server.";
+                    console.log("Invalid data sent:", data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = error.message;
+            }
+        }
+    </script>
+</body>
+</html>
