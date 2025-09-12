@@ -1082,7 +1082,7 @@ class Player {
 class Network {
     constructor(gameScene) {
         this.gameScene = gameScene;
-        this.socket = new WebSocket('ws://51.120.1.0:25565/');
+        this.socket = new WebSocket('ws://51.120.1.0:8080/');
         this.socket.onopen = function (event) {
             console.log('Connected to WebSocket server');
             const data = JSON.stringify({

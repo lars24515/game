@@ -200,7 +200,7 @@ class Network{
     }
 }
 
-network = new Network(25565);
+network = new Network(8080);
 
 // World generation
 /*
