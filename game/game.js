@@ -1072,7 +1072,9 @@ class Player {
 class Network {
     constructor(gameScene) {
         this.gameScene = gameScene;
-        this.socket = new WebSocket('ws://localhost:6969');
+        // Use the same hostname as the page, but WebSocket port 6969
+        const wsHost = window.location.hostname;
+        this.socket = new WebSocket(`ws://${wsHost}:6969`);
         this.socket.onopen = function (event) {
             console.log('Connected to WebSocket server');
             const data = JSON.stringify({

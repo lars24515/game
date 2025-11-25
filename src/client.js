@@ -8,7 +8,7 @@ async function play() {
         if (playerName.length == 0) {
             throw new Error("Name cannot be empty");
         }
-        const response = await fetch('http://localhost:4000/play', {
+        const response = await fetch('/play', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -23,7 +23,7 @@ async function play() {
 
        if (data.message == "OK"){
         // redirect to game route on server
-        window.location.href = "http://localhost:4000/game?username=" + playerName;
+        window.location.href = "/game?username=" + playerName;
        } else {
         // show error on client
         console.log("invalid data sent to server:")
