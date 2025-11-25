@@ -174,6 +174,7 @@ class Game extends Phaser.Scene {
         this.natureSeed = null;
         this.UIDepth = 10;
         this.activeMessages = [];
+        this.generatedChunks = new Set(); // Track generated chunks
         //  this.randomTileGenerator = null;
     }
 
@@ -186,184 +187,200 @@ class Game extends Phaser.Scene {
     }
 
     preload() {
+        this.load.setBaseURL('/assets');
         // player sprite sheet
-        this.load.spritesheet("playerSpriteSheet", "/assets/player/spritesheet.png", {
+        this.load.spritesheet("playerSpriteSheet", "Player/spritesheet.png", {
             frameWidth: 16,
             frameHeight: 16,
-        });
+        }, { scaleMode: Phaser.ScaleModes.NEAREST });
 
-        this.load.spritesheet("greenTreeSpriteSheet", "/assets/resources/tree_spritesheet.png", {
+        this.load.spritesheet("greenTreeSpriteSheet", "Resources/tree_spritesheet.png", {
             frameWidth: 45,
             frameHeight: 76,
         });
 
-        this.load.image("destroyedTree", "/assets/Resources/destroyed_tree.png");
-        this.load.image("tree_top", "/assets/Resources/tree_top.png");
+        this.load.image("destroyedTree", "Resources/destroyed_tree.png");
+        this.load.image("tree_top", "Resources/tree_top.png");
 
-        this.load.spritesheet("zombieSpriteSheet", "/assets/Zombie.png", {
+        this.load.spritesheet("zombieSpriteSheet", "Zombie.png", {
             frameWidth: 32,
             frameHeight: 32,
         });
 
         // player
-        this.load.image("player", "/assets/player/new still.png");
-        this.load.image("playerHolding", "/assets/player/holding.png");
+        this.load.image("player", "Player/new still.png");
+        this.load.image("playerHolding", "Player/holding.png");
 
-        this.load.image("grass0", "/assets/resources/grass/0.png");
-        this.load.image("grass1", "/assets/resources/grass/1.png");
-        this.load.image("grass2", "/assets/resources/grass/2.png");
-        this.load.image("grass3", "/assets/resources/grass/3.png");
-        this.load.image("grass4", "/assets/resources/grass/4.png");
-        this.load.image("grass5", "/assets/resources/grass/5.png");
-        this.load.image("grass6", "/assets/resources/grass/6.png");
+        this.load.image("grass0", "Resources/grass/0.png");
+        this.load.image("grass1", "Resources/grass/1.png");
+        this.load.image("grass2", "Resources/grass/2.png");
+        this.load.image("grass3", "Resources/grass/3.png");
+        this.load.image("grass4", "Resources/grass/4.png");
+        this.load.image("grass5", "Resources/grass/5.png");
+        this.load.image("grass6", "Resources/grass/6.png");
 
         // nature
-        this.load.image("grass", "/assets/resources/grass4.png");
-        this.load.image("water", "/assets/resources/new/water.png");
-        this.load.image("sand", "/assets/resources/sand2.png");
-        this.load.image("mountain", "/assets/resources/mountain2.png");
-        this.load.image("tree", "/assets/resources/bush.png");
-        this.load.image("sugarcane", "/assets/resources/sugarcane.png");
-        this.load.image("dark_mountain", "/assets/resources/dark_mountain.png");
+        this.load.image("grass", "Resources/grass4.png");
+        this.load.image("water", "Resources/new/water.png");
+        this.load.image("sand", "Resources/sand2.png");
+        this.load.image("mountain", "Resources/mountain2.png");
+        this.load.image("tree", "Resources/bush.png");
+        this.load.image("sugarcane", "Resources/sugarcane.png");
+        this.load.image("dark_mountain", "Resources/dark_mountain.png");
 
         // seeds
-        this.load.image("treeSeed", "/assets/Resources/tree_seed.png");
+        this.load.image("treeSeed", "Resources/tree_seed.png");
 
         // item images
 
         // building
-        this.load.image("woodDoor", "/assets/building/wood_door.png");
-        this.load.image("woodPlanks", "/assets/building/wood_floor.png");
-        this.load.image("woodWall", "/assets/building/wood_wall.png");
+        this.load.image("woodDoor", "building/wood_door.png");
+        this.load.image("woodPlanks", "building/wood_floor.png");
+        this.load.image("woodWall", "building/wood_wall.png");
 
         // food
-        this.load.image("apple", "/assets/Items/tile224.png");
-        this.load.image("banana", "/assets/Items/tile225.png");
-        this.load.image("pear", "/assets/Items/tile226.png");
-        this.load.image("strawberry", "/assets/Items/tile228.png");
-        this.load.image("carrot", "/assets/Items/tile230.png");
-        this.load.image("mushroom", "/assets/Items/tile236.png");
-        this.load.image("bread", "/assets/Items/tile237.png");
-        this.load.image("chicken", "/assets/Items/tile239.png");
-        this.load.image("steak", "/assets/Items/tile241.png");
-        this.load.image("egg", "/assets/Items/tile246.png");
+        this.load.image("apple", "Items/tile224.png");
+        this.load.image("banana", "Items/tile225.png");
+        this.load.image("pear", "Items/tile226.png");
+        this.load.image("strawberry", "Items/tile228.png");
+        this.load.image("carrot", "Items/tile230.png");
+        this.load.image("mushroom", "Items/tile236.png");
+        this.load.image("bread", "Items/tile237.png");
+        this.load.image("chicken", "Items/tile239.png");
+        this.load.image("steak", "Items/tile241.png");
+        this.load.image("egg", "Items/tile246.png");
 
         // tools
 
         // wood
-        this.load.image("woodenSword", "/assets/items/wooden_sword.png");
-        this.load.image("woodenPickaxe", "/assets/items/wooden_pickaxe.png");
-        this.load.image("woodenAxe", "/assets/items/wooden_axe.png");
-        this.load.image("woodenMace", "/assets/items/tile093.png");
+        this.load.image("woodenSword", "Items/wooden_sword.png");
+        this.load.image("woodenPickaxe", "Items/wooden_pickaxe.png");
+        this.load.image("woodenAxe", "Items/wooden_axe.png");
+        this.load.image("woodenMace", "Items/tile093.png");
 
         // metal
-        this.load.image("ironSword", "/assets/items/iron_sword.png");
-        this.load.image("ironPickaxe", "/assets/items/iron_pickaxe.png");
-        this.load.image("ironAxe", "/assets/items/iron_axe.png");
+        this.load.image("ironSword", "Items/metal_sword.png");
+        this.load.image("ironPickaxe", "Items/metal_pickaxe.png");
+        this.load.image("ironAxe", "Items/metal_axe.png");
 
         // diamond
-        this.load.image("diamondSword", "/assets/items/tile082.png");
+        this.load.image("diamondSword", "Items/tile082.png");
 
         // resources
-        this.load.image("wood", "/assets/Items/wood.png")
-        this.load.image("sapling", "/assets/Resources/tree_seed.png");
+        this.load.image("wood", "Items/wood.png")
+        this.load.image("sapling", "Resources/tree_seed.png");
 
         // UI elements
-        this.load.image("health", "/assets/ui/health_icon.png");
-        this.load.image("hunger", "/assets/ui/hunger_icon.png");
-        this.load.image("thirst", "/assets/ui/thirst_icon.png");
-        this.load.image("stamina", "/assets/ui/stamina_icon.png");
-        this.load.image("crafting", "/assets/ui/crafting.png");
-        this.load.image("craftingMenu", "/assets/ui/craftingMenu.png");
-        this.load.image("craftingSlot", "/assets/ui/crafting_slot.png");
+        this.load.image("health", "UI/health_icon.png");
+        this.load.image("hunger", "UI/hunger_icon.png");
+        this.load.image("thirst", "UI/thirst_icon.png");
+        this.load.image("stamina", "UI/stamina_icon.png");
+        this.load.image("crafting", "UI/crafting.png");
+        this.load.image("craftingMenu", "UI/craftingMenu.png");
+        this.load.image("craftingSlot", "UI/crafting_slot.png");
 
 
         console.log("Preloaded assets");
     }
 
     create() {
+        // Wait for assets to load before creating animations
+        this.load.once('complete', () => {
+            // Ensure all pixel art textures are not smoothed
+            this.textures.each(texture => {
+                texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+            });
 
-        // tree animation spritesheet
-        this.anims.create({
-            key: "greenTreeIdle",
-            frames: this.anims.generateFrameNumbers("greenTreeSpriteSheet"),
-            frameRate: 7,
-            repeat: -1,
-        })
+            // tree animation spritesheet
+            this.anims.create({
+                key: "greenTreeIdle",
+                frames: this.anims.generateFrameNumbers("greenTreeSpriteSheet"),
+                frameRate: 7,
+                repeat: -1,
+            })
 
-        // player spritesheet
-        this.anims.create({
-            key: "idleDown",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [0, 1, 2] }),
-            frameRate: 7,
-            repeat: -1,
-        })
+            // player spritesheet
+            this.anims.create({
+                key: "idleDown",
+                frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [0, 1, 2] }),
+                frameRate: 7,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "idleSide",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [8, 9, 10] }),
-            frameRate: 7,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "idleSide",
+                frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [8, 9, 10] }),
+                frameRate: 7,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "idleUp",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [16, 17, 18] }),
-            frameRate: 7,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "idleUp",
+                frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [16, 17, 18] }),
+                frameRate: 7,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "runDown",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [24, 25, 26, 27] }),
-            frameRate: 7,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "runDown",
+                frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [24, 25, 26, 27] }),
+                frameRate: 7,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "runSide",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [32, 33, 34, 35] }),
-            frameRate: 7,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "runSide",
+                frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [32, 33, 34, 35] }),
+                frameRate: 7,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "runUp",
-            frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [40, 41, 42, 43] }),
-            frameRate: 7,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "runUp",
+                frames: this.anims.generateFrameNumbers("playerSpriteSheet", { frames: [40, 41, 42, 43] }),
+                frameRate: 7,
+                repeat: -1,
+            })
 
-        // zombie animations
+            // zombie animations
 
-        this.anims.create({
-            key: "zombieIdle",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [0, 1, 2, 3, 4, 5, 6, 7] }),
-            frameRate: 10,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "zombieIdle",
+                frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [0, 1, 2, 3, 4, 5, 6, 7] }),
+                frameRate: 10,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "zombieAttack",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [13, 14, 15, 16, 17, 18, 19] }),
-            framerate: 10,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "zombieAttack",
+                frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [13, 14, 15, 16, 17, 18, 19] }),
+                frameRate: 10,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "zombieWalk",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [26, 27, 28, 29, 30, 31, 32, 33] }),
-            framerate: 10,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "zombieWalk",
+                frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [26, 27, 28, 29, 30, 31, 32, 33] }),
+                frameRate: 10,
+                repeat: -1,
+            })
 
-        this.anims.create({
-            key: "zombieDeath",
-            frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [65, 66, 67, 68, 69, 70, 71, 72] }),
-            framerate: 10,
-            repeat: -1,
-        })
+            this.anims.create({
+                key: "zombieDeath",
+                frames: this.anims.generateFrameNumbers("zombieSpriteSheet", { frames: [65, 66, 67, 68, 69, 70, 71, 72] }),
+                frameRate: 10,
+                repeat: -1,
+            })
 
+            // Initialize the rest of the game after animations are created
+            this.initializeGame();
+        });
+
+        // Start loading
+        this.load.start();
+    }
+
+    initializeGame() {
         this.treesGroup = this.add.group();
 
         this.tiles = this.add.group();
@@ -381,9 +398,6 @@ class Game extends Phaser.Scene {
             }
         });
 
-
-
-
         // textures
 
         this.grassTextures = [
@@ -395,8 +409,6 @@ class Game extends Phaser.Scene {
             "grass5",
             "grass6",
         ];
-
-
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasdKeys = this.input.keyboard.addKeys({
@@ -574,6 +586,20 @@ class Game extends Phaser.Scene {
         // this.updateOtherClientsHolding();
         this.renderOtherHolding();
         this.renderDisplayNames();
+
+        // Optimize animations: pause off-screen tree animations
+        this.treesGroup.children.each(sprite => {
+            if (sprite.anims && sprite.anims.isPlaying) {
+                const camera = this.cameras.main;
+                const bounds = new Phaser.Geom.Rectangle(camera.worldView.x, camera.worldView.y, camera.worldView.width, camera.worldView.height);
+                const spriteBounds = sprite.getBounds();
+                if (!Phaser.Geom.Rectangle.Overlaps(bounds, spriteBounds)) {
+                    sprite.anims.pause();
+                } else if (sprite.anims.isPaused) {
+                    sprite.anims.resume();
+                }
+            }
+        });
     }
 
     handleKeyDown(key) {
@@ -740,7 +766,13 @@ class Game extends Phaser.Scene {
             scaleX = 3;
             sprite.setOrigin(0.5, 0.75);
             sprite.setTexture("greenTreeSpriteSheet");
-            sprite.play("greenTreeIdle", true);
+            
+            // Check if animation exists before playing
+            if (this.anims.get("greenTreeIdle")) {
+                sprite.play("greenTreeIdle", true);
+            } else {
+                console.warn("greenTreeIdle animation not found, skipping animation for tree at", x, y);
+            }
 
             // interactivity
 
@@ -789,35 +821,44 @@ class Game extends Phaser.Scene {
     }
 
 
-    generateWorld(seed) {
-        console.log("hi");
-        const noiseGenerator = new SimplexNoise(seed);
-        console.log("created noise map", noiseGenerator, "with seed", seed);
+    generateChunk(chunkX, chunkY) {
+        const startX = chunkX * this.chunkSize * this.tileSize;
+        const startY = chunkY * this.chunkSize * this.tileSize;
+        const endX = startX + this.chunkSize * this.tileSize;
+        const endY = startY + this.chunkSize * this.tileSize;
 
-        const natureRandom = this.seedRandom(this.natureSeed);
+        const natureRandom = this.seedRandom(this.natureSeed + chunkX * 1000 + chunkY); // Vary seed per chunk
 
-        for (let i = 0; i < this.worldSize / this.tileSize; i++) {
-            for (let j = 0; j < this.worldSize / this.tileSize; j++) {
-
-                const tileType = this.getTile(i, j, noiseGenerator, this.noiseScale);
+        for (let i = startX / this.tileSize; i < endX / this.tileSize; i++) {
+            for (let j = startY / this.tileSize; j < endY / this.tileSize; j++) {
+                const tileType = this.getTile(i, j, this.noiseGenerator, this.noiseScale);
                 if (tileType === "grass") {
                     this.drawTile(this.tileSize * i, this.tileSize * j, "grass");
-
                     if (natureRandom() < 0.05) {
                         this.drawTile(this.tileSize * i, this.tileSize * j, "tree");
                     }
                 } else if (tileType == "sand") {
                     this.drawTile(this.tileSize * i, this.tileSize * j, "sand");
-
                     if (natureRandom() < 0.2) {
                         this.drawTile(this.tileSize * i, this.tileSize * j, "sugarcane");
                     }
-
-                } else { // original
+                } else {
                     this.drawTile(this.tileSize * i, this.tileSize * j, tileType);
                 }
+            }
+        }
+    }
 
-
+    generateWorld(seed) {
+        console.log("Generating world with seed:", seed);
+        this.noiseGenerator = new SimplexNoise(seed);
+        // Generate initial chunks around origin
+        for (let cx = -1; cx <= 1; cx++) {
+            for (let cy = -1; cy <= 1; cy++) {
+                if (!this.generatedChunks.has(`${cx},${cy}`)) {
+                    this.generateChunk(cx, cy);
+                    this.generatedChunks.add(`${cx},${cy}`);
+                }
             }
         }
     }
@@ -1096,7 +1137,6 @@ class Network {
             const data = JSON.parse(event.data);
             switch (data.type) {
                 case "worldSeed":
-                    console.log("h222i");
                     const seed = data.seed;
                     const natureSeed = data.natureSeed;
                     const worldSize = data.worldSize;
@@ -1120,7 +1160,7 @@ class Network {
                     this.gameScene.cameras.main.setBounds(0, 0, this.gameScene.worldSize * this.gameScene.tileSize, this.gameScene.worldSize * this.gameScene.tileSize); // Set bounds to match world size
                     this.gameScene.cameras.main.startFollow(this.gameScene.localPlayer.sprite, true, 0.1, 0.1); // Smooth follow
 
-                    console.log("created camera follow thing");
+                    console.log("Set camera mode to follow");
                     console.log("generating world with seed: " + seed);
                     this.gameScene.generateWorld(seed);
                     break;
@@ -1679,6 +1719,9 @@ const config = {
     width: 1920,
     height: 1080,
     pixelArt: true,
+    render: {
+        willReadFrequently: true // Optimize Canvas2D performance for getImageData operations
+    },
     physics: {
         default: 'arcade',
         arcade: {
