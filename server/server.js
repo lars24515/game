@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 class WebServer {
     constructor(port) {
@@ -8,11 +9,27 @@ class WebServer {
 
         this.app.use(cors());
         this.app.use(express.json());
+        
+        // Serve static files from src and game directories
+        this.app.use('/src', express.static(path.join(__dirname, '../src')));
+        this.app.use('/game', express.static(path.join(__dirname, '../game')));
+        this.app.use('/assets', express.static(path.join(__dirname, '../assets')));
 
         this.setupRoutes();
     }
 
     setupRoutes() {
+        // GET route for play - returns index.html
+        this.app.get('/play', (req, res) => {
+            res.sendFile(path.join(__dirname, '../src/index.html'));
+        });
+
+        // GET route for game - returns game.html
+        this.app.get('/game', (req, res) => {
+            res.sendFile(path.join(__dirname, '../game/game.html'));
+        });
+
+        // POST route for play validation
         this.app.post('/play', (req, res) => {
             this.handlePlayRequest(req, res);
         });

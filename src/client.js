@@ -22,11 +22,11 @@ async function play() {
         const data = await response.json();
 
        if (data.message == "OK"){
-        // redirec to game.html tihng
-        window.location.href = "../game/game.html?username=" + playerName;
+        // redirect to game route on server
+        window.location.href = "http://localhost:4000/game?username=" + playerName;
        } else {
-        // shoe error on client
-        console.log("invalid data esnt to server:")
+        // show error on client
+        console.log("invalid data sent to server:")
         console.log(data.message);
        }
     } catch (error) {
