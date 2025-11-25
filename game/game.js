@@ -187,95 +187,95 @@ class Game extends Phaser.Scene {
 
     preload() {
         // player sprite sheet
-        this.load.spritesheet("playerSpriteSheet", "../assets/player/spritesheet.png", {
+        this.load.spritesheet("playerSpriteSheet", "/assets/player/spritesheet.png", {
             frameWidth: 16,
             frameHeight: 16,
         });
 
-        this.load.spritesheet("greenTreeSpriteSheet", "../assets/resources/tree_spritesheet.png", {
+        this.load.spritesheet("greenTreeSpriteSheet", "/assets/resources/tree_spritesheet.png", {
             frameWidth: 45,
             frameHeight: 76,
         });
 
-        this.load.image("destroyedTree", "../assets/Resources/destroyed_tree.png");
-        this.load.image("tree_top", "../assets/Resources/tree_top.png");
+        this.load.image("destroyedTree", "/assets/Resources/destroyed_tree.png");
+        this.load.image("tree_top", "/assets/Resources/tree_top.png");
 
-        this.load.spritesheet("zombieSpriteSheet", "../assets/Zombie.png", {
+        this.load.spritesheet("zombieSpriteSheet", "/assets/Zombie.png", {
             frameWidth: 32,
             frameHeight: 32,
         });
 
         // player
-        this.load.image("player", "../assets/player/new still.png");
-        this.load.image("playerHolding", "../assets/player/holding.png");
+        this.load.image("player", "/assets/player/new still.png");
+        this.load.image("playerHolding", "/assets/player/holding.png");
 
-        this.load.image("grass0", "../assets/resources/grass/0.png");
-        this.load.image("grass1", "../assets/resources/grass/1.png");
-        this.load.image("grass2", "../assets/resources/grass/2.png");
-        this.load.image("grass3", "../assets/resources/grass/3.png");
-        this.load.image("grass4", "../assets/resources/grass/4.png");
-        this.load.image("grass5", "../assets/resources/grass/5.png");
-        this.load.image("grass6", "../assets/resources/grass/6.png");
+        this.load.image("grass0", "/assets/resources/grass/0.png");
+        this.load.image("grass1", "/assets/resources/grass/1.png");
+        this.load.image("grass2", "/assets/resources/grass/2.png");
+        this.load.image("grass3", "/assets/resources/grass/3.png");
+        this.load.image("grass4", "/assets/resources/grass/4.png");
+        this.load.image("grass5", "/assets/resources/grass/5.png");
+        this.load.image("grass6", "/assets/resources/grass/6.png");
 
         // nature
-        this.load.image("grass", "../assets/resources/grass4.png");
-        this.load.image("water", "../assets/resources/new/water.png");
-        this.load.image("sand", "../assets/resources/sand2.png");
-        this.load.image("mountain", "../assets/resources/mountain2.png");
-        this.load.image("tree", "../assets/resources/bush.png");
-        this.load.image("sugarcane", "../assets/resources/sugarcane.png");
-        this.load.image("dark_mountain", "../assets/resources/dark_mountain.png");
+        this.load.image("grass", "/assets/resources/grass4.png");
+        this.load.image("water", "/assets/resources/new/water.png");
+        this.load.image("sand", "/assets/resources/sand2.png");
+        this.load.image("mountain", "/assets/resources/mountain2.png");
+        this.load.image("tree", "/assets/resources/bush.png");
+        this.load.image("sugarcane", "/assets/resources/sugarcane.png");
+        this.load.image("dark_mountain", "/assets/resources/dark_mountain.png");
 
         // seeds
-        this.load.image("treeSeed", "../assets/Resources/tree_seed.png");
+        this.load.image("treeSeed", "/assets/Resources/tree_seed.png");
 
         // item images
 
         // building
-        this.load.image("woodDoor", "../assets/building/wood_door.png");
-        this.load.image("woodPlanks", "../assets/building/wood_floor.png");
-        this.load.image("woodWall", "../assets/building/wood_wall.png");
+        this.load.image("woodDoor", "/assets/building/wood_door.png");
+        this.load.image("woodPlanks", "/assets/building/wood_floor.png");
+        this.load.image("woodWall", "/assets/building/wood_wall.png");
 
         // food
-        this.load.image("apple", "../assets/Items/tile224.png");
-        this.load.image("banana", "../assets/Items/tile225.png");
-        this.load.image("pear", "../assets/Items/tile226.png");
-        this.load.image("strawberry", "../assets/Items/tile228.png");
-        this.load.image("carrot", "../assets/Items/tile230.png");
-        this.load.image("mushroom", "../assets/Items/tile236.png");
-        this.load.image("bread", "../assets/Items/tile237.png");
-        this.load.image("chicken", "../assets/Items/tile239.png");
-        this.load.image("steak", "../assets/Items/tile241.png");
-        this.load.image("egg", "../assets/Items/tile246.png");
+        this.load.image("apple", "/assets/Items/tile224.png");
+        this.load.image("banana", "/assets/Items/tile225.png");
+        this.load.image("pear", "/assets/Items/tile226.png");
+        this.load.image("strawberry", "/assets/Items/tile228.png");
+        this.load.image("carrot", "/assets/Items/tile230.png");
+        this.load.image("mushroom", "/assets/Items/tile236.png");
+        this.load.image("bread", "/assets/Items/tile237.png");
+        this.load.image("chicken", "/assets/Items/tile239.png");
+        this.load.image("steak", "/assets/Items/tile241.png");
+        this.load.image("egg", "/assets/Items/tile246.png");
 
         // tools
 
         // wood
-        this.load.image("woodenSword", "../assets/items/wooden_sword.png");
-        this.load.image("woodenPickaxe", "../assets/items/wooden_pickaxe.png");
-        this.load.image("woodenAxe", "../assets/items/wooden_axe.png");
-        this.load.image("woodenMace", "../assets/items/tile093.png");
+        this.load.image("woodenSword", "/assets/items/wooden_sword.png");
+        this.load.image("woodenPickaxe", "/assets/items/wooden_pickaxe.png");
+        this.load.image("woodenAxe", "/assets/items/wooden_axe.png");
+        this.load.image("woodenMace", "/assets/items/tile093.png");
 
         // metal
-        this.load.image("ironSword", "../assets/items/iron_sword.png");
-        this.load.image("ironPickaxe", "../assets/items/iron_pickaxe.png");
-        this.load.image("ironAxe", "../assets/items/iron_axe.png");
+        this.load.image("ironSword", "/assets/items/iron_sword.png");
+        this.load.image("ironPickaxe", "/assets/items/iron_pickaxe.png");
+        this.load.image("ironAxe", "/assets/items/iron_axe.png");
 
         // diamond
-        this.load.image("diamondSword", "../assets/items/tile082.png");
+        this.load.image("diamondSword", "/assets/items/tile082.png");
 
         // resources
-        this.load.image("wood", "../assets/Items/wood.png")
-        this.load.image("sapling", "../assets/Resources/tree_seed.png");
+        this.load.image("wood", "/assets/Items/wood.png")
+        this.load.image("sapling", "/assets/Resources/tree_seed.png");
 
         // UI elements
-        this.load.image("health", "../assets/ui/health_icon.png");
-        this.load.image("hunger", "../assets/ui/hunger_icon.png");
-        this.load.image("thirst", "../assets/ui/thirst_icon.png");
-        this.load.image("stamina", "../assets/ui/stamina_icon.png");
-        this.load.image("crafting", "../assets/ui/crafting.png");
-        this.load.image("craftingMenu", "../assets/ui/craftingMenu.png");
-        this.load.image("craftingSlot", "../assets/ui/crafting_slot.png");
+        this.load.image("health", "/assets/ui/health_icon.png");
+        this.load.image("hunger", "/assets/ui/hunger_icon.png");
+        this.load.image("thirst", "/assets/ui/thirst_icon.png");
+        this.load.image("stamina", "/assets/ui/stamina_icon.png");
+        this.load.image("crafting", "/assets/ui/crafting.png");
+        this.load.image("craftingMenu", "/assets/ui/craftingMenu.png");
+        this.load.image("craftingSlot", "/assets/ui/crafting_slot.png");
 
 
         console.log("Preloaded assets");
@@ -1085,7 +1085,7 @@ class Network {
 
         this.socket.onclose = function (event) {
             console.log('Disconnected from WebSocket server');
-            window.location.href = "../src/index.html";
+            window.location.href = "/play";
         };
 
 
